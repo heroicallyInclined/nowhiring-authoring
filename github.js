@@ -82,3 +82,17 @@ export async function findOpenPullRequest(token, org, repo, branch) {
 export function createPullRequest(token, org, repo, branch, title) {
   return jsonPost(token, `/repos/${org}/${repo}/pulls`, { title, head: branch, base: "main", body: title });
 }
+
+export async function getCheckRuns(token, org, repo, sha) {
+  const response = await ghFetch(token, `/repos/${org}/${repo}/commits/${sha}/check-runs`);
+  return response.json();
+}
+
+// A GitHub Actions check run's id is also its job id — verified against a
+// live run rather than assumed. The redirect this hits lands on Azure Blob
+// Storage, which strips our Authorization header (cross-origin) and answers
+// with Access-Control-Allow-Origin: * on the log itself.
+export async function getJobLog(token, org, repo, jobId) {
+  const response = await ghFetch(token, `/repos/${org}/${repo}/actions/jobs/${jobId}/logs`);
+  return response.text();
+}

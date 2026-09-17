@@ -73,5 +73,5 @@ export async function saveChanges(token, org, repo, loaded, changedTables, messa
     s.prUrl = pr.html_url;
   }
 
-  return { branch: s.branch, prNumber: s.prNumber, prUrl: s.prUrl };
+  return { branch: s.branch, prNumber: s.prNumber, prUrl: s.prUrl, sha: commit.sha };
 }

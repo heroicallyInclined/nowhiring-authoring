@@ -2,6 +2,7 @@ import { GitHubError } from "./github.js";
 import { loadTables } from "./tables.js";
 import { saveChanges } from "./save.js";
 import { lineDiff, hunks } from "./diff.js";
+import { pollChecks } from "./checks.js";
 
 const ORG = "heroicallyInclined";
 const REPO = "nowHiringHeroes";
@@ -16,6 +17,9 @@ let loaded = null;
 // The same tables with the session's live edits. Diffed against `loaded` at
 // Save time to find which files actually changed.
 let edited = null;
+
+// Cancels a previous save's check poll if a new save starts before it settles.
+let stopChecksPolling = null;
 
 function getStoredToken() {
   try {
@@ -165,10 +169,13 @@ function renderEditor(token, editor) {
   const saveStatus = document.createElement("p");
   editor.appendChild(saveStatus);
 
-  saveButton.addEventListener("click", () => requestSave(token, messageInput, saveButton, review, saveStatus));
+  const checksStatus = document.createElement("div");
+  editor.appendChild(checksStatus);
+
+  saveButton.addEventListener("click", () => requestSave(token, messageInput, saveButton, review, saveStatus, checksStatus));
 }
 
-function requestSave(token, messageInput, saveButton, review, saveStatus) {
+function requestSave(token, messageInput, saveButton, review, saveStatus, checksStatus) {
   const message = messageInput.value.trim();
   if (!message) {
     saveStatus.textContent = "Say what changed before saving.";
@@ -189,7 +196,7 @@ function requestSave(token, messageInput, saveButton, review, saveStatus) {
   review.replaceChildren(renderReview(changed, () => {
     saveButton.disabled = false;
     review.replaceChildren();
-  }, () => confirmSave(token, changed, message, saveButton, review, saveStatus)));
+  }, () => confirmSave(token, changed, message, saveButton, review, saveStatus, checksStatus)));
 }
 
 // One diff per changed file, each collapsed to a few lines of context around
@@ -236,7 +243,7 @@ function renderReview(changed, onCancel, onConfirm) {
   return container;
 }
 
-async function confirmSave(token, changed, message, saveButton, review, saveStatus) {
+async function confirmSave(token, changed, message, saveButton, review, saveStatus, checksStatus) {
   review.replaceChildren();
   saveStatus.textContent = "Saving…";
   try {
@@ -250,12 +257,38 @@ async function confirmSave(token, changed, message, saveButton, review, saveStat
     link.target = "_blank";
     link.rel = "noopener";
     saveStatus.appendChild(link);
+
+    if (stopChecksPolling) stopChecksPolling();
+    checksStatus.textContent = "Checks: waiting…";
+    stopChecksPolling = pollChecks(token, ORG, REPO, result.sha, (update) => renderCheckStatus(checksStatus, update));
   } catch (error) {
     saveStatus.textContent = error instanceof GitHubError
       ? error.message
       : "Something went wrong saving.";
   } finally {
     saveButton.disabled = false;
+  }
+}
+
+// Reflects one poll tick from checks.js's pollChecks onto the page — the PR
+// he opened is the one place this could otherwise only be seen by leaving.
+function renderCheckStatus(container, update) {
+  container.replaceChildren();
+
+  if (update.state === "pending") {
+    container.textContent = "Checks: running…";
+  } else if (update.state === "pass") {
+    container.textContent = "Checks passed.";
+  } else if (update.state === "timeout") {
+    container.textContent = "Checks are still running — check the pull request on GitHub.";
+  } else if (update.state === "fail") {
+    const heading = document.createElement("p");
+    heading.textContent = `Checks failed (${update.run.name}):`;
+    container.appendChild(heading);
+
+    const pre = document.createElement("pre");
+    pre.textContent = update.tail;
+    container.appendChild(pre);
   }
 }
 
