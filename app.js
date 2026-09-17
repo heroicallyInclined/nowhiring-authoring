@@ -1,5 +1,6 @@
 import { GitHubError } from "./github.js";
 import { loadTables } from "./tables.js";
+import { saveChanges } from "./save.js";
 
 const ORG = "heroicallyInclined";
 const REPO = "nowHiringHeroes";
@@ -7,10 +8,13 @@ const TOKEN_KEY = "nowhiring-authoring-token";
 
 const app = document.getElementById("app");
 
-// The tables held by the current session, keyed by table name to its raw
-// JSON text, plus the commit sha they were read at. Task 3's save reads
-// from here.
+// The tables as last read or last saved, keyed by table name to its raw JSON
+// text, plus the commit sha and tree sha they were pinned to.
 let loaded = null;
+
+// The same tables with the session's live edits. Diffed against `loaded` at
+// Save time to find which files actually changed.
+let edited = null;
 
 function getStoredToken() {
   try {
@@ -91,33 +95,107 @@ function renderAuthedScreen(token) {
   status.textContent = "Loading tables…";
   section.appendChild(status);
 
-  const list = document.createElement("ul");
-  section.appendChild(list);
+  const editor = document.createElement("div");
+  section.appendChild(editor);
 
-  checkTokenAndLoadTables(token, status, list);
+  checkTokenAndLoadTables(token, status, editor);
 
   return section;
 }
 
-async function checkTokenAndLoadTables(token, status, list) {
+async function checkTokenAndLoadTables(token, status, editor) {
   try {
-    const { sha, expiry, tables } = await loadTables(token, ORG, REPO);
-    loaded = { sha, tables };
+    const { sha, treeSha, expiry, tables } = await loadTables(token, ORG, REPO);
+    loaded = { sha, treeSha, tables };
+    edited = new Map(tables);
 
     const shortSha = sha.slice(0, 7);
     status.textContent = expiry
       ? `Authorized. Token expires ${expiry}. Loaded ${tables.size} tables at ${shortSha}.`
       : `Authorized. Loaded ${tables.size} tables at ${shortSha}.`;
 
-    for (const [name, text] of tables) {
-      const item = document.createElement("li");
-      item.textContent = `${name}.json — ${text.length} bytes`;
-      list.appendChild(item);
-    }
+    renderEditor(token, editor);
   } catch (error) {
     status.textContent = error instanceof GitHubError
       ? error.message
       : "Something went wrong reaching GitHub.";
+  }
+}
+
+function renderEditor(token, editor) {
+  for (const [name, text] of edited) {
+    const details = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.textContent = `${name}.json — ${text.length} bytes`;
+    details.appendChild(summary);
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.rows = 20;
+    textarea.cols = 100;
+    textarea.addEventListener("input", () => edited.set(name, textarea.value));
+    details.appendChild(textarea);
+
+    editor.appendChild(details);
+  }
+
+  const messageLabel = document.createElement("label");
+  messageLabel.htmlFor = "commit-message";
+  messageLabel.textContent = "What changed, and why:";
+  editor.appendChild(messageLabel);
+
+  editor.appendChild(document.createElement("br"));
+
+  const messageInput = document.createElement("input");
+  messageInput.type = "text";
+  messageInput.id = "commit-message";
+  messageInput.size = 80;
+  editor.appendChild(messageInput);
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.textContent = "Save";
+  editor.appendChild(saveButton);
+
+  const saveStatus = document.createElement("p");
+  editor.appendChild(saveStatus);
+
+  saveButton.addEventListener("click", () => handleSave(token, messageInput, saveStatus));
+}
+
+async function handleSave(token, messageInput, saveStatus) {
+  const message = messageInput.value.trim();
+  if (!message) {
+    saveStatus.textContent = "Say what changed before saving.";
+    return;
+  }
+
+  const changed = new Map();
+  for (const [name, text] of edited) {
+    if (text !== loaded.tables.get(name)) changed.set(name, text);
+  }
+  if (changed.size === 0) {
+    saveStatus.textContent = "Nothing changed.";
+    return;
+  }
+
+  saveStatus.textContent = "Saving…";
+  try {
+    const result = await saveChanges(token, ORG, REPO, loaded, changed, message);
+    for (const [name, text] of changed) loaded.tables.set(name, text);
+
+    saveStatus.textContent = `Saved to ${result.branch}. `;
+    const link = document.createElement("a");
+    link.href = result.prUrl;
+    link.textContent = `PR #${result.prNumber}`;
+    link.target = "_blank";
+    link.rel = "noopener";
+    saveStatus.appendChild(link);
+  } catch (error) {
+    saveStatus.textContent = error instanceof GitHubError
+      ? error.message
+      : "Something went wrong saving.";
   }
 }
 

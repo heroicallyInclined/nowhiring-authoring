@@ -26,7 +26,8 @@ export const TABLE_NAMES = [
 export async function loadTables(token, org, repo) {
   const commitResponse = await ghFetch(token, `/repos/${org}/${repo}/commits/main`);
   const expiry = tokenExpiration(commitResponse);
-  const { sha } = await commitResponse.json();
+  const { sha, commit } = await commitResponse.json();
+  const treeSha = commit.tree.sha;
 
   const tables = new Map();
   await Promise.all(TABLE_NAMES.map(async (name) => {
@@ -39,5 +40,5 @@ export async function loadTables(token, org, repo) {
     tables.set(name, await response.text());
   }));
 
-  return { sha, expiry, tables };
+  return { sha, treeSha, expiry, tables };
 }
