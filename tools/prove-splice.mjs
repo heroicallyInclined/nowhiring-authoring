@@ -1,0 +1,91 @@
+// Dev-only proof for the splice layer — not shipped, not referenced by
+// index.html. Run with: node tools/prove-splice.mjs
+//
+// Reads real tables from the sibling game checkout (../nowHiringHeroes) and
+// runs the two cases plans/authoring-tool.md Task 4 names as its acceptance
+// check: a scalar edit and a row add, each producing a minimal line diff and
+// passing the round-trip guard.
+import { readFileSync } from "node:fs";
+import { spliceScalar, spliceAddRow, verifySplice } from "../splice.js";
+import { lineDiff, hunks } from "../diff.js";
+
+const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
+
+function printDiff(oldText, newText) {
+  for (const row of hunks(lineDiff(oldText, newText), 0)) {
+    if (row.type === "gap") console.log("  ⋮");
+    else console.log(`  ${row.type === "add" ? "+" : row.type === "del" ? "-" : " "} ${row.line}`);
+  }
+}
+
+function changedLineCount(oldText, newText) {
+  return lineDiff(oldText, newText).filter((row) => row.type !== "same").length;
+}
+
+// A same-position value change renders as a -/+ pair in the line diff (as
+// `git diff` would too) — this counts it as the one line position it is.
+function changedLinePositions(oldText, newText) {
+  const a = oldText.split("\n");
+  const b = newText.split("\n");
+  if (a.length !== b.length) return null;
+  return a.filter((line, index) => line !== b[index]).length;
+}
+
+let failures = 0;
+
+function check(label, condition) {
+  console.log(`${condition ? "ok" : "FAIL"} — ${label}`);
+  if (!condition) failures++;
+}
+
+// --- Case 1: scalar edit, run.json starting_gold 50 -> 60 ---
+{
+  const path = new URL("data/run.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const intended = JSON.parse(original);
+  intended.starting_gold = 60;
+
+  const spliced = spliceScalar(original, ["starting_gold"], 60);
+  const verdict = verifySplice(spliced, intended);
+
+  console.log("\n=== scalar edit: run.json starting_gold 50 -> 60 ===");
+  printDiff(original, spliced);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
+  check("exactly one changed line", changedLinePositions(original, spliced) === 1);
+}
+
+// --- Case 2: row add, ingredients.json new meat entry after "boar" ---
+{
+  const path = new URL("data/ingredients.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const intended = JSON.parse(original);
+  const boarIndex = intended.entries.findIndex((e) => e.id === "boar");
+  intended.entries.splice(boarIndex + 1, 0, {
+    id: "fox",
+    label: "Fox",
+    category: "meat",
+    rarity: "uncommon",
+  });
+
+  const spliced = spliceAddRow(
+    original,
+    ["entries"],
+    [
+      { path: ["id"], value: "fox" },
+      { path: ["label"], value: "Fox" },
+      { path: ["rarity"], value: "uncommon" },
+    ],
+    boarIndex,
+  );
+  const verdict = verifySplice(spliced, intended);
+
+  console.log("\n=== row add: ingredients.json, a new meat entry after boar ===");
+  printDiff(original, spliced);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
+  check("exactly one added line, nothing else touched", changedLineCount(original, spliced) === 1);
+}
+
+console.log(failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`);
+process.exit(failures === 0 ? 0 : 1);

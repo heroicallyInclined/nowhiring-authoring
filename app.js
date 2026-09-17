@@ -1,6 +1,7 @@
 import { GitHubError } from "./github.js";
 import { loadTables } from "./tables.js";
 import { saveChanges } from "./save.js";
+import { lineDiff, hunks } from "./diff.js";
 
 const ORG = "heroicallyInclined";
 const REPO = "nowHiringHeroes";
@@ -158,13 +159,16 @@ function renderEditor(token, editor) {
   saveButton.textContent = "Save";
   editor.appendChild(saveButton);
 
+  const review = document.createElement("div");
+  editor.appendChild(review);
+
   const saveStatus = document.createElement("p");
   editor.appendChild(saveStatus);
 
-  saveButton.addEventListener("click", () => handleSave(token, messageInput, saveStatus));
+  saveButton.addEventListener("click", () => requestSave(token, messageInput, saveButton, review, saveStatus));
 }
 
-async function handleSave(token, messageInput, saveStatus) {
+function requestSave(token, messageInput, saveButton, review, saveStatus) {
   const message = messageInput.value.trim();
   if (!message) {
     saveStatus.textContent = "Say what changed before saving.";
@@ -180,6 +184,60 @@ async function handleSave(token, messageInput, saveStatus) {
     return;
   }
 
+  saveStatus.textContent = "";
+  saveButton.disabled = true;
+  review.replaceChildren(renderReview(changed, () => {
+    saveButton.disabled = false;
+    review.replaceChildren();
+  }, () => confirmSave(token, changed, message, saveButton, review, saveStatus)));
+}
+
+// One diff per changed file, each collapsed to a few lines of context around
+// what actually moved — see plans/authoring-tool.md Task 4.
+function renderReview(changed, onCancel, onConfirm) {
+  const container = document.createElement("div");
+
+  for (const [name, newText] of changed) {
+    const details = document.createElement("details");
+    details.open = true;
+
+    const summary = document.createElement("summary");
+    summary.textContent = `${name}.json`;
+    details.appendChild(summary);
+
+    const pre = document.createElement("pre");
+    const rows = hunks(lineDiff(loaded.tables.get(name), newText));
+    for (const row of rows) {
+      const line = document.createElement("div");
+      if (row.type === "gap") {
+        line.textContent = "⋮";
+      } else {
+        line.textContent = `${row.type === "add" ? "+" : row.type === "del" ? "-" : " "} ${row.line}`;
+        line.className = `diff-${row.type}`;
+      }
+      pre.appendChild(line);
+    }
+    details.appendChild(pre);
+    container.appendChild(details);
+  }
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.textContent = "Cancel";
+  cancelButton.addEventListener("click", onCancel);
+  container.appendChild(cancelButton);
+
+  const confirmButton = document.createElement("button");
+  confirmButton.type = "button";
+  confirmButton.textContent = "Confirm and save";
+  confirmButton.addEventListener("click", onConfirm);
+  container.appendChild(confirmButton);
+
+  return container;
+}
+
+async function confirmSave(token, changed, message, saveButton, review, saveStatus) {
+  review.replaceChildren();
   saveStatus.textContent = "Saving…";
   try {
     const result = await saveChanges(token, ORG, REPO, loaded, changed, message);
@@ -196,6 +254,8 @@ async function handleSave(token, messageInput, saveStatus) {
     saveStatus.textContent = error instanceof GitHubError
       ? error.message
       : "Something went wrong saving.";
+  } finally {
+    saveButton.disabled = false;
   }
 }
 
