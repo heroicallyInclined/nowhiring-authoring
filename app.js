@@ -1,10 +1,16 @@
-import { ghFetch, GitHubError, tokenExpiration } from "./github.js";
+import { GitHubError } from "./github.js";
+import { loadTables } from "./tables.js";
 
 const ORG = "heroicallyInclined";
 const REPO = "nowHiringHeroes";
 const TOKEN_KEY = "nowhiring-authoring-token";
 
 const app = document.getElementById("app");
+
+// The tables held by the current session, keyed by table name to its raw
+// JSON text, plus the commit sha they were read at. Task 3's save reads
+// from here.
+let loaded = null;
 
 function getStoredToken() {
   try {
@@ -82,28 +88,30 @@ function renderAuthedScreen(token) {
   section.appendChild(forgetButton);
 
   const status = document.createElement("p");
-  status.textContent = "Checking token…";
+  status.textContent = "Loading tables…";
   section.appendChild(status);
 
   const list = document.createElement("ul");
   section.appendChild(list);
 
-  checkTokenAndListData(token, status, list);
+  checkTokenAndLoadTables(token, status, list);
 
   return section;
 }
 
-async function checkTokenAndListData(token, status, list) {
+async function checkTokenAndLoadTables(token, status, list) {
   try {
-    const response = await ghFetch(token, `/repos/${ORG}/${REPO}/contents/data`);
-    const expiry = tokenExpiration(response);
-    const entries = await response.json();
+    const { sha, expiry, tables } = await loadTables(token, ORG, REPO);
+    loaded = { sha, tables };
 
-    status.textContent = expiry ? `Authorized. Token expires ${expiry}.` : "Authorized.";
+    const shortSha = sha.slice(0, 7);
+    status.textContent = expiry
+      ? `Authorized. Token expires ${expiry}. Loaded ${tables.size} tables at ${shortSha}.`
+      : `Authorized. Loaded ${tables.size} tables at ${shortSha}.`;
 
-    for (const entry of entries) {
+    for (const [name, text] of tables) {
       const item = document.createElement("li");
-      item.textContent = entry.name;
+      item.textContent = `${name}.json — ${text.length} bytes`;
       list.appendChild(item);
     }
   } catch (error) {
