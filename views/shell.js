@@ -7,6 +7,7 @@ import { build as buildPeople } from "./people.js";
 import { build as buildInn } from "./inn.js";
 import { build as buildEvening } from "./evening.js";
 import { build as buildLetter } from "./letter.js";
+import { build as buildTuning } from "./tuning.js";
 
 // One entry per view named in plans/authoring-tool.md Task 8. `tables` lists
 // the data/*.json files the view reads and edits — the Raw JSON tab falls
@@ -23,7 +24,7 @@ export const VIEWS = [
   { key: "inn", label: "The Inn", tables: ["amenities", "inn"], build: buildInn },
   { key: "evening", label: "The Evening", tables: ["guest_schedule", "interrupts"], build: buildEvening },
   { key: "letter", label: "The Letter", tables: ["notice"], build: buildLetter },
-  { key: "tuning", label: "Tuning", tables: ["bands", "attraction", "run"] },
+  { key: "tuning", label: "Tuning", tables: ["bands", "attraction", "run"], build: buildTuning },
 ];
 
 // Renders the nav plus the active view into a fresh element. `ctx` is

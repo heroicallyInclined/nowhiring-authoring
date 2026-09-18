@@ -470,3 +470,61 @@ body {
   width: 100%;
   max-width: 100%;
 }
+
+.tuning-table {
+  margin-bottom: 1.5rem;
+}
+
+.tuning-table > h3 {
+  text-transform: capitalize;
+}
+
+.tuning-object,
+.tuning-array {
+  margin: 0.25rem 0 0.75rem 0.75rem;
+}
+
+.tuning-object-label,
+.tuning-array-label {
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.tuning-row {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.tuning-row-label {
+  font-weight: bold;
+}
+
+.tuning-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.tuning-label {
+  min-width: 12rem;
+  opacity: 0.8;
+}
+
+.tuning-value {
+  font: inherit;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  text-align: left;
+}
+
+.tuning-value:hover {
+  border-color: #888;
+}
+
+.tuning-edit-input,
+.tuning-select {
+  font: inherit;
+}
