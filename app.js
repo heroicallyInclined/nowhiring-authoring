@@ -1,5 +1,7 @@
 import { GitHubError } from "./github.js";
-import { loadTables } from "./tables.js";
+import { loadTables, loadSchemas } from "./tables.js";
+import { buildInverseIndex } from "./graph.js";
+import { buildShell } from "./views/shell.js";
 import { saveChanges } from "./save.js";
 import { lineDiff, hunks } from "./diff.js";
 import { pollChecks } from "./checks.js";
@@ -17,6 +19,13 @@ let loaded = null;
 // The same tables with the session's live edits. Diffed against `loaded` at
 // Save time to find which files actually changed.
 let edited = null;
+
+// data/schema/<table>.schema.json, read once and never edited.
+let schemas = null;
+
+// The most recent text that parsed for each table, used when the current
+// Raw text is mid-edit and invalid — a view still has something to render.
+let lastGoodParsed = null;
 
 // Cancels a previous save's check poll if a new save starts before it settles.
 let stopChecksPolling = null;
@@ -111,8 +120,11 @@ function renderAuthedScreen(token) {
 async function checkTokenAndLoadTables(token, status, editor) {
   try {
     const { sha, treeSha, expiry, tables } = await loadTables(token, ORG, REPO);
+    schemas = await loadSchemas(token, ORG, REPO, sha);
     loaded = { sha, treeSha, tables };
     edited = new Map(tables);
+    lastGoodParsed = new Map();
+    for (const [name, text] of tables) lastGoodParsed.set(name, JSON.parse(text));
 
     const shortSha = sha.slice(0, 7);
     status.textContent = expiry
@@ -127,23 +139,45 @@ async function checkTokenAndLoadTables(token, status, editor) {
   }
 }
 
-function renderEditor(token, editor) {
+// Parses `edited`'s current text fresh, per plans/authoring-tool-task8.md's
+// shared architecture decision — a table whose Raw text doesn't currently
+// parse falls back to the last text that did, so a mid-edit typo elsewhere
+// doesn't blank out every other view.
+function buildContext() {
+  const tables = new Map();
   for (const [name, text] of edited) {
-    const details = document.createElement("details");
-
-    const summary = document.createElement("summary");
-    summary.textContent = `${name}.json — ${text.length} bytes`;
-    details.appendChild(summary);
-
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.rows = 20;
-    textarea.cols = 100;
-    textarea.addEventListener("input", () => edited.set(name, textarea.value));
-    details.appendChild(textarea);
-
-    editor.appendChild(details);
+    try {
+      const parsed = JSON.parse(text);
+      lastGoodParsed.set(name, parsed);
+      tables.set(name, parsed);
+    } catch {
+      tables.set(name, lastGoodParsed.get(name));
+    }
   }
+  return {
+    tables,
+    schemas,
+    index: buildInverseIndex(schemas, tables),
+    edited,
+    onEdit: (name, text) => edited.set(name, text),
+  };
+}
+
+function renderEditor(token, editor) {
+  let activeKey = "world";
+  let activeTab = "structured";
+
+  const shellContainer = document.createElement("div");
+  editor.appendChild(shellContainer);
+
+  function redrawShell() {
+    shellContainer.replaceChildren(buildShell(buildContext(), activeKey, activeTab, (key, tab) => {
+      activeKey = key;
+      activeTab = tab;
+      redrawShell();
+    }));
+  }
+  redrawShell();
 
   const messageLabel = document.createElement("label");
   messageLabel.htmlFor = "commit-message";

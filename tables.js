@@ -42,3 +42,18 @@ export async function loadTables(token, org, repo) {
 
   return { sha, treeSha, expiry, tables };
 }
+
+// Schemas (data/schema/<table>.schema.json, plans/authoring-tool.md Task 7)
+// aren't edited and don't need pinning against a later save — read once per
+// session, parsed immediately since every consumer (graph.js, the views)
+// wants the schema object, never its source text.
+export async function loadSchemas(token, org, repo, sha) {
+  const schemas = new Map();
+  await Promise.all(TABLE_NAMES.map(async (name) => {
+    const response = await ghFetch(token, `/repos/${org}/${repo}/contents/data/schema/${name}.schema.json?ref=${sha}`, {
+      headers: { Accept: "application/vnd.github.raw" },
+    });
+    schemas.set(name, JSON.parse(await response.text()));
+  }));
+  return schemas;
+}

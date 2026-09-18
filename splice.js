@@ -68,6 +68,33 @@ export function spliceAddRow(text, arrayPath, edits, afterIndex = -1) {
   return text.slice(0, insertAt) + insertion + text.slice(insertAt);
 }
 
+// Inserts one scalar-only object literal into an array that has no sibling
+// to clone from — the case `spliceAddRow` can't handle. Deliberately narrow
+// (Task 4's own rule: never re-serialize, never emit a whole structure): a
+// single flat `{key: scalar, ...}` object only, indented one level past the
+// array's own key line since there is no sibling line to match instead.
+export function spliceInsertIntoEmptyArray(text, arrayPath, value) {
+  const tree = parseTree(text);
+  const node = findNodeAtLocation(tree, arrayPath);
+  if (!node || node.type !== "array") {
+    throw new Error(`splice: path ${JSON.stringify(arrayPath)} is not an array`);
+  }
+  if (node.children.length !== 0) {
+    throw new Error(`splice: path ${JSON.stringify(arrayPath)} is not empty`);
+  }
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("splice: spliceInsertIntoEmptyArray only writes a single scalar-only object");
+  }
+
+  const lineStart = text.lastIndexOf("\n", node.offset) + 1;
+  const keyLineIndent = text.slice(lineStart, node.offset).match(/^\s*/)[0];
+  const innerIndent = `${keyLineIndent}  `;
+  const entries = Object.entries(value).map(([key, v]) => `"${key}": ${literalFor(v)}`).join(", ");
+  const replacement = `[\n${innerIndent}{ ${entries} }\n${keyLineIndent}]`;
+
+  return text.slice(0, node.offset) + replacement + text.slice(node.offset + node.length);
+}
+
 function deepEqual(a, b) {
   if (a === b) return true;
   if (typeof a !== typeof b || a === null || b === null) return false;

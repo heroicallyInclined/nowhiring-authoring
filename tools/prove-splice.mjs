@@ -6,7 +6,7 @@
 // check: a scalar edit and a row add, each producing a minimal line diff and
 // passing the round-trip guard.
 import { readFileSync } from "node:fs";
-import { spliceScalar, spliceAddRow, verifySplice } from "../splice.js";
+import { spliceScalar, spliceAddRow, spliceInsertIntoEmptyArray, verifySplice } from "../splice.js";
 import { lineDiff, hunks } from "../diff.js";
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
@@ -85,6 +85,27 @@ function check(label, condition) {
   check("guard passed", verdict.ok);
   if (!verdict.ok) console.log("  reason:", verdict.reason);
   check("exactly one added line, nothing else touched", changedLineCount(original, spliced) === 1);
+}
+
+// --- Case 3: insert into empty array, locations.json drowned_vineyard's supplies [] -> one entry ---
+{
+  const path = new URL("data/locations.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const intended = JSON.parse(original);
+  const locationIndex = intended.entries.findIndex((e) => e.id === "drowned_vineyard");
+  intended.entries[locationIndex].supplies.push({ category: "fruits", amount: 2 });
+
+  const spliced = spliceInsertIntoEmptyArray(
+    original,
+    ["entries", locationIndex, "supplies"],
+    { category: "fruits", amount: 2 },
+  );
+  const verdict = verifySplice(spliced, intended);
+
+  console.log("\n=== insert into empty array: locations.json drowned_vineyard's supplies ===");
+  printDiff(original, spliced);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
 }
 
 console.log(failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`);

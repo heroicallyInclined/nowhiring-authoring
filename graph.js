@@ -15,6 +15,20 @@ function addEdge(index, value, edge) {
   index.get(value).push(edge);
 }
 
+// Resolves a union field's discriminator against one data item, returning
+// the matched variant's name and its merged (common + variant) field defs,
+// or null when nothing matches. Exported so a view (people.js, Task 8.6)
+// can read a union item's shape the same way `walk` below does, instead of
+// re-deriving the discriminator lookup a second time.
+export function resolveVariant(field, data) {
+  if (!data || typeof data !== "object") return null;
+  const { by, key } = field.discriminator || {};
+  const variantName = by === "value" ? String(data[key] ?? "") : data && key in data ? "present" : "absent";
+  const variant = (field.variants || {})[variantName];
+  if (!variant) return null;
+  return { name: variantName, fields: { ...(field.common_fields || {}), ...(variant.fields || {}) } };
+}
+
 // Walks `data` against `field` (a schema field definition), recording an
 // edge for every `id_ref` value and every `enum` value that carries a
 // `values_from` (both are "edges" per the schema's own vocabulary — see
@@ -53,13 +67,9 @@ function walk(data, field, path, tableName, index) {
       return;
     }
     case "union": {
-      if (!data || typeof data !== "object") return;
-      const { by, key } = field.discriminator || {};
-      const variantName = by === "value" ? String(data[key] ?? "") : data && key in data ? "present" : "absent";
-      const variant = (field.variants || {})[variantName];
-      if (!variant) return;
-      const merged = { ...(field.common_fields || {}), ...(variant.fields || {}) };
-      walk(data, { type: "object", fields: merged }, path, tableName, index);
+      const resolved = resolveVariant(field, data);
+      if (!resolved) return;
+      walk(data, { type: "object", fields: resolved.fields }, path, tableName, index);
       return;
     }
     default:
