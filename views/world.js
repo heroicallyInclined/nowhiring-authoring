@@ -143,11 +143,7 @@ export function build(ctx) {
       const tags = document.createElement("div");
       tags.className = "tags";
       for (const target of targets) {
-        const tag = document.createElement("span");
-        tag.className = "tag";
-        tag.textContent = target.label;
-        tags.appendChild(tag);
-        tags.appendChild(buildRarityBadge(target.leans));
+        tags.appendChild(buildRarityBadge(target.leans, target.label));
       }
       td.appendChild(tags);
     }

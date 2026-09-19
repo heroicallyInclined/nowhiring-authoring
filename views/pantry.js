@@ -22,7 +22,7 @@ export function locationSourcing(index, locationsData, ingredient) {
   for (const location of locationsData.entries) {
     const target = (location.targets || []).find((t) => t.id === ingredient.id);
     if (target) {
-      tags.push({ label: `${location.name} — target`, rarity: target.leans });
+      tags.push({ label: location.name, rarity: target.leans });
     } else if ((location.supplies || []).some((s) => s.category === ingredient.category)) {
       tags.push(location.name);
     }
@@ -57,18 +57,21 @@ export function sellPriceOf(pricesData, ingredient) {
 }
 
 // Each entry is either a plain string or `{ label, rarity }` — the latter for
-// a location's target, whose `leans` renders as a colored badge alongside
-// the plain-text label rather than folded into the tag's own text.
+// a location's target, whose `leans` renders as a single colored badge
+// naming the location inside it ("The Old Millpond — Common") rather than a
+// plain tag next to a bare color chip.
 function buildTagList(entries) {
   const list = document.createElement("div");
   list.className = "tags";
   for (const entry of entries) {
-    const { label, rarity } = typeof entry === "string" ? { label: entry, rarity: null } : entry;
-    const tag = document.createElement("span");
-    tag.className = "tag";
-    tag.textContent = label;
-    list.appendChild(tag);
-    if (rarity) list.appendChild(buildRarityBadge(rarity));
+    if (typeof entry === "string") {
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = entry;
+      list.appendChild(tag);
+    } else {
+      list.appendChild(buildRarityBadge(entry.rarity, entry.label));
+    }
   }
   return list;
 }

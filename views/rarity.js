@@ -2,9 +2,13 @@
 // enum, per locations.schema.json's `targets[].leans`, pinned to the same
 // Pantry.RARITY_ORDER as ingredients[].rarity) needs to render as color
 // rather than plain text — plans/authoring-tool-ui-polish.md Task 2.
-export function buildRarityBadge(rarity) {
+//
+// `label`, when given, names the thing that has this rarity (an ingredient,
+// a target) and renders inside the badge itself ("Boar — Common") rather
+// than as a separate plain-text tag next to a bare color chip.
+export function buildRarityBadge(rarity, label) {
   const span = document.createElement("span");
   span.className = `rarity-badge rarity-badge--${rarity}`;
-  span.textContent = rarity;
+  span.textContent = label ? `${label} — ${rarity}` : rarity;
   return span;
 }
