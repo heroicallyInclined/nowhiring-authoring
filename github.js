@@ -96,3 +96,30 @@ export async function getJobLog(token, org, repo, jobId) {
   const response = await ghFetch(token, `/repos/${org}/${repo}/actions/jobs/${jobId}/logs`);
   return response.text();
 }
+
+// A save's own commit (`{ headSha }`) or the latest successful run on a
+// branch (`{ branch, status }`, e.g. main's baseline) — plans/authoring-
+// tool-task9.md Task 9.3.
+export async function getWorkflowRuns(token, org, repo, { headSha, branch, status } = {}) {
+  const query = new URLSearchParams();
+  if (headSha) query.set("head_sha", headSha);
+  if (branch) query.set("branch", branch);
+  if (status) query.set("status", status);
+  const response = await ghFetch(token, `/repos/${org}/${repo}/actions/runs?${query}`);
+  return response.json();
+}
+
+export async function listRunArtifacts(token, org, repo, runId) {
+  const response = await ghFetch(token, `/repos/${org}/${repo}/actions/runs/${runId}/artifacts`);
+  return response.json();
+}
+
+// Redirects the same way getJobLog's does (Azure Blob Storage, Authorization
+// stripped on the cross-origin hop, Access-Control-Allow-Origin: * on the
+// answer) — assumed by analogy, not independently confirmed; see
+// plans/authoring-tool-task9.md Task 9.3's own open question. The response
+// is a binary zip, so it's read as an ArrayBuffer rather than json()/text().
+export async function downloadArtifact(token, org, repo, artifactId) {
+  const response = await ghFetch(token, `/repos/${org}/${repo}/actions/artifacts/${artifactId}/zip/zip`);
+  return response.arrayBuffer();
+}

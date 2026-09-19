@@ -528,3 +528,30 @@ body {
 .tuning-select {
   font: inherit;
 }
+
+.consequences {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #888;
+  border-radius: 4px;
+}
+
+.consequences h3 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.consequences h3:first-child {
+  margin-top: 0;
+}
+
+.consequences ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.numeric-consequences pre {
+  white-space: pre-wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}

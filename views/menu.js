@@ -1,5 +1,3 @@
-import { referrersOf } from "../graph.js";
-
 // The Menu (plans/authoring-tool-task8.md Task 8.4): recipes with slots as
 // chips, tinted by two structural facts — whether the world can ever supply
 // that category (same rule as the World grid's empty-column read) and
@@ -7,11 +5,11 @@ import { referrersOf } from "../graph.js";
 // state, no probability. Read-only, like the Pantry — no edit affordance
 // was asked for.
 
-// Exported alongside `build` so tools/prove-menu.mjs can check the same
-// logic against the real sibling data without a DOM.
-export function isSuppliable(index, category) {
-  return referrersOf(index, category).some((r) => r.table === "locations");
-}
+// isSuppliable moved to consequences.js (Task 9.1) — the same dead-category
+// check the structural consequence panel needs — imported and re-exported
+// here so tools/prove-menu.mjs's existing import keeps working unchanged.
+import { isSuppliable } from "../consequences.js";
+export { isSuppliable };
 
 // `Inn.caps`' three-reading convention (CLAUDE.md's Architecture rules): -1
 // uncapped, 0 a category the house cannot keep at all, n a shelf that can
