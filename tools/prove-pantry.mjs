@@ -56,7 +56,8 @@ const wheat = ingredient("wheat");
 const carrots = ingredient("carrots");
 check(
   "wheat's sourcing names The Old Millpond as a target",
-  locationSourcing(index, locationsData, wheat).some((tag) => tag.includes("The Old Millpond") && tag.includes("target")),
+  locationSourcing(index, locationsData, wheat).some((tag) =>
+    typeof tag === "object" && tag.label.includes("The Old Millpond") && tag.label.includes("target") && tag.rarity),
 );
 check(
   "carrots' sourcing names The Old Millpond only as a supplier, not a target",

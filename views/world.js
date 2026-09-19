@@ -1,4 +1,5 @@
 import { spliceScalar, spliceAddRow, spliceInsertIntoEmptyArray, verifySplice } from "../splice.js";
+import { buildRarityBadge } from "./rarity.js";
 
 // The World grid (plans/authoring-tool-task8.md Task 8.2): locations as
 // rows, ingredient categories as columns. Cell content and the row's rarity
@@ -144,8 +145,9 @@ export function build(ctx) {
       for (const target of targets) {
         const tag = document.createElement("span");
         tag.className = "tag";
-        tag.textContent = `${target.label} (${target.leans})`;
+        tag.textContent = target.label;
         tags.appendChild(tag);
+        tags.appendChild(buildRarityBadge(target.leans));
       }
       td.appendChild(tags);
     }

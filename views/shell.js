@@ -144,6 +144,11 @@ export function buildShell(ctx, activeKey, activeTab, onNavigate) {
   root.appendChild(tabs);
   root.appendChild(warning);
 
+  const bodyHeading = document.createElement("h2");
+  bodyHeading.className = "view-title";
+  bodyHeading.textContent = view.label;
+  root.appendChild(bodyHeading);
+
   const body = document.createElement("div");
   body.className = "view-body";
   if (activeTab === "raw") {

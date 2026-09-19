@@ -101,6 +101,10 @@ function renderTokenScreen() {
 function renderAuthedScreen(token) {
   const section = document.createElement("section");
 
+  const header = document.createElement("header");
+  header.className = "app-header";
+  section.appendChild(header);
+
   const forgetButton = document.createElement("button");
   forgetButton.type = "button";
   forgetButton.textContent = "Forget token";
@@ -108,11 +112,12 @@ function renderAuthedScreen(token) {
     clearToken();
     render();
   });
-  section.appendChild(forgetButton);
+  header.appendChild(forgetButton);
 
   const status = document.createElement("p");
+  status.className = "app-status";
   status.textContent = "Loading tables…";
-  section.appendChild(status);
+  header.appendChild(status);
 
   const editor = document.createElement("div");
   section.appendChild(editor);

@@ -1,10 +1,96 @@
 :root {
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
+
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --border: #d4d4d8;
+  --text: #18181b;
+  --text-muted: #71717a;
+  --accent: #2563eb;
+  --accent-ink: #ffffff;
+  --accent-bg: rgba(37, 99, 235, 0.15);
+  --radius: 6px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  --success: #1a7f37;
+  --success-bg: rgba(26, 127, 55, 0.08);
+  --success-bg-strong: rgba(26, 127, 55, 0.2);
+  --danger: #cf222e;
+  --danger-bg: rgba(207, 34, 46, 0.08);
+  --danger-bg-strong: rgba(207, 34, 46, 0.2);
+  --highlight: #f59e0b;
+  --divider: rgba(0, 0, 0, 0.12);
+
+  --rarity-common-bg: #f4f4f5;
+  --rarity-common-fg: #18181b;
+  --rarity-common-border: #d4d4d8;
+  --rarity-uncommon-bg: #dcfce7;
+  --rarity-uncommon-fg: #15803d;
+  --rarity-uncommon-border: #4ade80;
+  --rarity-rare-bg: #dbeafe;
+  --rarity-rare-fg: #1d4ed8;
+  --rarity-rare-border: #60a5fa;
+  --rarity-delicacy-bg: #ffedd5;
+  --rarity-delicacy-fg: #c2410c;
+  --rarity-delicacy-border: #fb923c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #18181b;
+    --surface-2: #27272a;
+    --border: #3f3f46;
+    --text: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --accent: #3b82f6;
+    --accent-ink: #0b1220;
+    --accent-bg: rgba(59, 130, 246, 0.2);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+    --success-bg: rgba(26, 127, 55, 0.16);
+    --success-bg-strong: rgba(26, 127, 55, 0.3);
+    --danger-bg: rgba(207, 34, 46, 0.16);
+    --danger-bg-strong: rgba(207, 34, 46, 0.3);
+    --divider: rgba(255, 255, 255, 0.12);
+
+    /* Common is deliberately NOT restated here — it keeps the light-mode
+       values above (light chip, dark text) even on a dark page, the one
+       rarity that stays a pale chip regardless of theme. */
+    --rarity-uncommon-bg: #14532d;
+    --rarity-uncommon-fg: #4ade80;
+    --rarity-uncommon-border: #22c55e;
+    --rarity-rare-bg: #1e3a5f;
+    --rarity-rare-fg: #60a5fa;
+    --rarity-rare-border: #3b82f6;
+    --rarity-delicacy-bg: #7c2d12;
+    --rarity-delicacy-fg: #fb923c;
+    --rarity-delicacy-border: #f97316;
+  }
 }
 
 body {
-  margin: 1.5rem;
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-status {
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .view-nav {
@@ -15,18 +101,34 @@ body {
 }
 
 .view-nav button,
-.view-tabs button {
+.view-tabs button,
+.guided-nav button {
   padding: 0.4rem 0.8rem;
-  border: 1px solid #888;
-  background: transparent;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
   cursor: pointer;
+}
+
+.view-nav button:hover,
+.view-tabs button:hover,
+.guided-nav button:hover {
+  border-color: var(--accent);
+}
+
+.view-nav button:focus-visible,
+.view-tabs button:focus-visible,
+.guided-nav button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .view-nav button.active,
 .view-tabs button.active {
-  background: #2563eb;
-  color: #fff;
-  border-color: #2563eb;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
 }
 
 .view-tabs {
@@ -35,10 +137,17 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.view-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
 .view-body {
-  border: 1px solid #888;
-  border-radius: 4px;
-  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
 }
 
 .placeholder {
@@ -57,17 +166,17 @@ body {
 }
 
 .validation:not(:empty) {
-  color: #c0392b;
+  color: var(--danger);
 }
 
 .diff-add {
-  color: #1a7f37;
-  background: rgba(26, 127, 55, 0.08);
+  color: var(--success);
+  background: var(--success-bg);
 }
 
 .diff-del {
-  color: #cf222e;
-  background: rgba(207, 34, 46, 0.08);
+  color: var(--danger);
+  background: var(--danger-bg);
 }
 
 .world-grid {
@@ -77,7 +186,7 @@ body {
 
 .world-grid th,
 .world-grid td {
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   padding: 0.4rem;
   vertical-align: top;
   text-align: left;
@@ -113,10 +222,10 @@ body {
   height: 100%;
 }
 
-.bar-common { background: #9ca3af; }
-.bar-uncommon { background: #60a5fa; }
-.bar-rare { background: #a78bfa; }
-.bar-delicacy { background: #f59e0b; }
+.bar-common { background: var(--rarity-common-border); }
+.bar-uncommon { background: var(--rarity-uncommon-border); }
+.bar-rare { background: var(--rarity-rare-border); }
+.bar-delicacy { background: var(--rarity-delicacy-border); }
 
 .cell-amount,
 .cell-empty {
@@ -129,7 +238,7 @@ body {
 
 .cell-amount:hover,
 .cell-empty:hover {
-  border-color: #888;
+  border-color: var(--border);
 }
 
 .cell-empty {
@@ -141,12 +250,13 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.2rem;
+  align-items: center;
 }
 
 .tag {
   font-size: 0.75rem;
   padding: 0.1rem 0.3rem;
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   border-radius: 999px;
 }
 
@@ -163,7 +273,7 @@ body {
 
 .pantry-table th,
 .pantry-table td {
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   padding: 0.4rem;
   vertical-align: top;
   text-align: left;
@@ -171,10 +281,36 @@ body {
 
 .rarity-badge {
   display: inline-block;
-  padding: 0.1rem 0.4rem;
-  border-radius: 3px;
-  font-size: 0.8rem;
-  color: #111;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid;
+}
+
+.rarity-badge--common {
+  background: var(--rarity-common-bg);
+  color: var(--rarity-common-fg);
+  border-color: var(--rarity-common-border);
+}
+
+.rarity-badge--uncommon {
+  background: var(--rarity-uncommon-bg);
+  color: var(--rarity-uncommon-fg);
+  border-color: var(--rarity-uncommon-border);
+}
+
+.rarity-badge--rare {
+  background: var(--rarity-rare-bg);
+  color: var(--rarity-rare-fg);
+  border-color: var(--rarity-rare-border);
+}
+
+.rarity-badge--delicacy {
+  background: var(--rarity-delicacy-bg);
+  color: var(--rarity-delicacy-fg);
+  border-color: var(--rarity-delicacy-border);
 }
 
 .menu-view {
@@ -212,11 +348,11 @@ body {
   text-transform: capitalize;
 }
 
-.chip-suppliable { background: rgba(26, 127, 55, 0.2); }
-.chip-unsuppliable { background: rgba(207, 34, 46, 0.2); }
+.chip-suppliable { background: var(--success-bg-strong); }
+.chip-unsuppliable { background: var(--danger-bg-strong); }
 
-.chip-day1 { border: 1px solid #888; }
-.chip-no-day1 { border: 1px dashed #888; opacity: 0.6; }
+.chip-day1 { border: 1px solid var(--border); }
+.chip-no-day1 { border: 1px dashed var(--border); opacity: 0.6; }
 
 .board-view {
   overflow-x: auto;
@@ -229,7 +365,7 @@ body {
 
 .board-grid th,
 .board-grid td {
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   padding: 0.4rem;
   vertical-align: top;
   text-align: left;
@@ -261,15 +397,15 @@ body {
 .demand-chip {
   font-size: 0.75rem;
   padding: 0.1rem 0.3rem;
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   border-radius: 3px;
 }
 
-.cell-overlap { background: rgba(26, 127, 55, 0.08); }
-.cell-no-overlap { background: rgba(207, 34, 46, 0.08); }
+.cell-overlap { background: var(--success-bg); }
+.cell-no-overlap { background: var(--danger-bg); }
 
-.tag-match { border-color: #1a7f37; }
-.tag-no-match { border-color: #cf222e; opacity: 0.7; }
+.tag-match { border-color: var(--success); }
+.tag-no-match { border-color: var(--danger); opacity: 0.7; }
 
 .people-view {
   display: flex;
@@ -295,15 +431,17 @@ body {
   width: 100%;
   text-align: left;
   padding: 0.4rem 0.6rem;
-  border: 1px solid #888;
-  background: transparent;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
   cursor: pointer;
 }
 
 .people-archetype.active {
-  background: #2563eb;
-  color: #fff;
-  border-color: #2563eb;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
 }
 
 .people-skills {
@@ -316,19 +454,19 @@ body {
 .skill-chip {
   font-size: 0.75rem;
   padding: 0.1rem 0.3rem;
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   border-radius: 3px;
 }
 
 .skill-top {
   font-weight: bold;
-  border-color: #f59e0b;
+  border-color: var(--highlight);
 }
 
 .people-quirk {
   padding: 0.4rem 0.6rem;
-  border: 1px solid #888;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .people-quirk-name {
@@ -336,8 +474,8 @@ body {
 }
 
 .quirk-relevant {
-  border-color: #1a7f37;
-  background: rgba(26, 127, 55, 0.08);
+  border-color: var(--success);
+  background: var(--success-bg);
 }
 
 .quirk-dimmed {
@@ -352,7 +490,7 @@ body {
 
 .inn-amenity {
   padding: 0.5rem 0;
-  border-bottom: 1px solid #888;
+  border-bottom: 1px solid var(--border);
 }
 
 .inn-amenity-name {
@@ -382,7 +520,7 @@ body {
 .inn-effect-chip {
   font-size: 0.75rem;
   padding: 0.1rem 0.3rem;
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   border-radius: 3px;
 }
 
@@ -398,7 +536,7 @@ body {
 
 .evening-table th,
 .evening-table td {
-  border: 1px solid #888;
+  border: 1px solid var(--border);
   padding: 0.4rem;
   vertical-align: top;
   text-align: left;
@@ -421,7 +559,7 @@ body {
 
 .evening-bar-fill {
   height: 100%;
-  background: #2563eb;
+  background: var(--accent);
 }
 
 .letter-view {
@@ -448,18 +586,18 @@ body {
 
 .letter-text:hover,
 .letter-text:focus {
-  border-bottom-color: #888;
+  border-bottom-color: var(--border);
 }
 
 .letter-placeholder {
   padding: 0 0.15rem;
   border-radius: 2px;
-  background: rgba(37, 99, 235, 0.15);
+  background: var(--accent-bg);
 }
 
 .letter-blank {
   padding: 0.05rem 0.3rem;
-  border: 1px dashed #888;
+  border: 1px dashed var(--border);
   border-radius: 3px;
   font-style: italic;
   opacity: 0.8;
@@ -492,7 +630,7 @@ body {
 
 .tuning-row {
   padding: 0.4rem 0;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+  border-bottom: 1px solid var(--divider);
 }
 
 .tuning-row-label {
@@ -521,7 +659,7 @@ body {
 }
 
 .tuning-value:hover {
-  border-color: #888;
+  border-color: var(--border);
 }
 
 .tuning-edit-input,
@@ -532,8 +670,8 @@ body {
 .consequences {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  border: 1px solid #888;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .consequences h3 {
@@ -564,17 +702,14 @@ body {
 }
 
 .guided-nav button {
-  padding: 0.4rem 0.8rem;
-  border: 1px dashed #888;
-  background: transparent;
-  cursor: pointer;
+  border-style: dashed;
 }
 
 .wizard {
   margin-bottom: 0.5rem;
   padding: 1rem;
-  border: 1px dashed #888;
-  border-radius: 4px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
 }
 
 .wizard-step {

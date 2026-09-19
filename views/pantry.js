@@ -1,4 +1,5 @@
 import { referrersOf } from "../graph.js";
+import { buildRarityBadge } from "./rarity.js";
 
 // The Pantry (plans/authoring-tool-task8.md Task 8.3): ingredients grouped by
 // category in ladder order, with rarity, buy/sell price, sourcing and dish
@@ -21,7 +22,7 @@ export function locationSourcing(index, locationsData, ingredient) {
   for (const location of locationsData.entries) {
     const target = (location.targets || []).find((t) => t.id === ingredient.id);
     if (target) {
-      tags.push(`${location.name} — target (${target.leans})`);
+      tags.push({ label: `${location.name} — target`, rarity: target.leans });
     } else if ((location.supplies || []).some((s) => s.category === ingredient.category)) {
       tags.push(location.name);
     }
@@ -55,14 +56,19 @@ export function sellPriceOf(pricesData, ingredient) {
   return basePrice > 0 ? Math.max(1, Math.floor(basePrice / 2)) : 0;
 }
 
-function buildTagList(labels) {
+// Each entry is either a plain string or `{ label, rarity }` — the latter for
+// a location's target, whose `leans` renders as a colored badge alongside
+// the plain-text label rather than folded into the tag's own text.
+function buildTagList(entries) {
   const list = document.createElement("div");
   list.className = "tags";
-  for (const label of labels) {
+  for (const entry of entries) {
+    const { label, rarity } = typeof entry === "string" ? { label: entry, rarity: null } : entry;
     const tag = document.createElement("span");
     tag.className = "tag";
     tag.textContent = label;
     list.appendChild(tag);
+    if (rarity) list.appendChild(buildRarityBadge(rarity));
   }
   return list;
 }
@@ -79,10 +85,7 @@ function buildRow(ctx, ingredient) {
   tr.appendChild(nameCell);
 
   const rarityCell = document.createElement("td");
-  const badge = document.createElement("span");
-  badge.className = `rarity-badge bar-${ingredient.rarity}`;
-  badge.textContent = ingredient.rarity;
-  rarityCell.appendChild(badge);
+  rarityCell.appendChild(buildRarityBadge(ingredient.rarity));
   tr.appendChild(rarityCell);
 
   const buyRow = (pricesData.buy || []).find((b) => b.good === ingredient.id);
