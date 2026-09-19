@@ -555,3 +555,40 @@ body {
   font-family: ui-monospace, monospace;
   font-size: 0.85rem;
 }
+
+.guided-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.guided-nav button {
+  padding: 0.4rem 0.8rem;
+  border: 1px dashed #888;
+  background: transparent;
+  cursor: pointer;
+}
+
+.wizard {
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+  border: 1px dashed #888;
+  border-radius: 4px;
+}
+
+.wizard-step {
+  margin-bottom: 0.5rem;
+}
+
+.wizard-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.wizard-label {
+  min-width: 8rem;
+  opacity: 0.8;
+}

@@ -22,7 +22,10 @@ function slotCategories(slot) {
   return slot.categories || [slot.category];
 }
 
-function buildChip(index, innData, category) {
+// Exported for views/wizards/add_dish.js (Task 10.5) — the same tinting the
+// Menu view already renders, reused rather than re-derived for the wizard's
+// own per-slot category picker.
+export function buildChip(index, innData, category) {
   const chip = document.createElement("span");
   const suppliable = isSuppliable(index, category);
   const onShelf = isOnShelfAtDayOne(innData, category);

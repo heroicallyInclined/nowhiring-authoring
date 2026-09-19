@@ -95,6 +95,52 @@ export function spliceInsertIntoEmptyArray(text, arrayPath, value) {
   return text.slice(0, node.offset) + replacement + text.slice(node.offset + node.length);
 }
 
+// Removes the array element at `index`, plus whichever neighbor's comma
+// separated it from the element that stays adjacent — mirrors Task 4's own
+// rule for a key delete, applied to a whole array element. `spliceAddRow`'s
+// two insertion shapes (comma-before for a new last element, comma-after
+// otherwise) are inverted here: removing the last element eats the comma
+// that used to follow the one before it; removing any other element eats
+// its own trailing line, comma included, leaving its neighbors' lines
+// untouched. Emptying the array down to its last element collapses to the
+// same bare `[]` a hand-written empty array already uses elsewhere in the
+// real data (`"supplies": []`), rather than leaving stray brackets/whitespace.
+export function spliceRemoveRow(text, arrayPath, index) {
+  const tree = parseTree(text);
+  const arrayNode = findNodeAtLocation(tree, arrayPath);
+  if (!arrayNode || arrayNode.type !== "array") {
+    throw new Error(`splice: path ${JSON.stringify(arrayPath)} is not an array`);
+  }
+  const children = arrayNode.children;
+  if (index < 0 || index >= children.length) {
+    throw new Error(`splice: index ${index} out of range for path ${JSON.stringify(arrayPath)}`);
+  }
+
+  if (children.length === 1) {
+    return text.slice(0, arrayNode.offset) + "[]" + text.slice(arrayNode.offset + arrayNode.length);
+  }
+
+  const element = children[index];
+  const next = children[index + 1];
+
+  let start;
+  let end;
+  if (next) {
+    // Not the last element: remove its whole line, comma included, up to
+    // (not through) the next element's own leading indentation.
+    start = text.lastIndexOf("\n", element.offset) + 1;
+    end = text.lastIndexOf("\n", next.offset) + 1;
+  } else {
+    // The last element: no trailing comma of its own to eat, so eat the one
+    // that used to separate it from the element before it instead.
+    const previous = children[index - 1];
+    start = previous.offset + previous.length;
+    end = element.offset + element.length;
+  }
+
+  return text.slice(0, start) + text.slice(end);
+}
+
 function deepEqual(a, b) {
   if (a === b) return true;
   if (typeof a !== typeof b || a === null || b === null) return false;

@@ -6,7 +6,7 @@
 // check: a scalar edit and a row add, each producing a minimal line diff and
 // passing the round-trip guard.
 import { readFileSync } from "node:fs";
-import { spliceScalar, spliceAddRow, spliceInsertIntoEmptyArray, verifySplice } from "../splice.js";
+import { spliceScalar, spliceAddRow, spliceInsertIntoEmptyArray, spliceRemoveRow, verifySplice } from "../splice.js";
 import { lineDiff, hunks } from "../diff.js";
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
@@ -104,6 +104,80 @@ function check(label, condition) {
 
   console.log("\n=== insert into empty array: locations.json drowned_vineyard's supplies ===");
   printDiff(original, spliced);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
+}
+
+// --- Case 4: row delete, ingredients.json's mid-array "duck" entry, then round-trip back ---
+{
+  const path = new URL("data/ingredients.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const parsed = JSON.parse(original);
+  const duckIndex = parsed.entries.findIndex((e) => e.id === "duck");
+  const goatIndex = duckIndex - 1; // "goat", duck's own previous sibling — re-add clones from here
+
+  const intended = JSON.parse(original);
+  intended.entries.splice(duckIndex, 1);
+
+  const removed = spliceRemoveRow(original, ["entries"], duckIndex);
+  const verdict = verifySplice(removed, intended);
+
+  console.log("\n=== row delete: ingredients.json, the mid-array \"duck\" entry ===");
+  printDiff(original, removed);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
+  check("exactly one removed line, nothing else touched", changedLineCount(original, removed) === 1);
+
+  const roundTripped = spliceAddRow(
+    removed,
+    ["entries"],
+    [
+      { path: ["id"], value: "duck" },
+      { path: ["label"], value: "Duck" },
+      { path: ["rarity"], value: "uncommon" },
+    ],
+    goatIndex,
+  );
+  check("remove + re-add round-trips to byte-identical text", roundTripped === original);
+}
+
+// --- Case 5: row delete, the only element of an array collapses to "[]" ---
+{
+  const path = new URL("data/locations.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const parsed = JSON.parse(original);
+  const locationIndex = parsed.entries.findIndex((e) => e.id === "old_millpond");
+
+  const intended = JSON.parse(original);
+  intended.entries[locationIndex].supplies = [];
+
+  const removed = spliceRemoveRow(original, ["entries", locationIndex, "supplies"], 0);
+  const verdict = verifySplice(removed, intended);
+
+  console.log("\n=== row delete: locations.json, old_millpond's only supplies entry ===");
+  printDiff(original, removed);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
+  check("collapses to a bare []", /"supplies":\s*\[\]/.test(removed));
+}
+
+// --- Case 6: row delete, the last of several elements drops the trailing comma correctly ---
+{
+  const path = new URL("data/locations.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const parsed = JSON.parse(original);
+  const locationIndex = parsed.entries.findIndex((e) => e.id === "ashen_wood");
+  const targets = parsed.entries[locationIndex].targets;
+  const lastIndex = targets.length - 1; // "bear"
+
+  const intended = JSON.parse(original);
+  intended.entries[locationIndex].targets = targets.slice(0, lastIndex);
+
+  const removed = spliceRemoveRow(original, ["entries", locationIndex, "targets"], lastIndex);
+  const verdict = verifySplice(removed, intended);
+
+  console.log("\n=== row delete: locations.json, ashen_wood's last target (\"bear\") ===");
+  printDiff(original, removed);
   check("guard passed", verdict.ok);
   if (!verdict.ok) console.log("  reason:", verdict.reason);
 }
