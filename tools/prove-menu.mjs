@@ -31,8 +31,8 @@ function check(label, condition) {
   if (!condition) failures++;
 }
 
-// staples: no location ever supplies it (World grid's empty column, Task
-// 8.2's own acceptance test) but the market stocks it from day 1 (cap 24).
+// staples: no location supplies it, only the cart (World grid's empty column, Task
+// 8.2's own acceptance test), and the shelf holds it from day 1.
 check("staples is not suppliable", isSuppliable(index, "staples") === false);
 check("staples is on the shelf at day 1", isOnShelfAtDayOne(innData, "staples") === true);
 

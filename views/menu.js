@@ -5,7 +5,7 @@
 // state, no probability. Read-only, like the Pantry — no edit affordance
 // was asked for.
 
-// isSuppliable moved to consequences.js (Task 9.1) — the same dead-category
+// isSuppliable moved to consequences.js (Task 9.1) — the same unsupplied-category
 // check the structural consequence panel needs — imported and re-exported
 // here so tools/prove-menu.mjs's existing import keeps working unchanged.
 import { isSuppliable } from "../consequences.js";
@@ -31,7 +31,7 @@ export function buildChip(index, innData, category) {
   const onShelf = isOnShelfAtDayOne(innData, category);
   chip.className = `menu-chip ${suppliable ? "chip-suppliable" : "chip-unsuppliable"} ${onShelf ? "chip-day1" : "chip-no-day1"}`;
   chip.textContent = category;
-  chip.title = `${suppliable ? "suppliable" : "never suppliable"}, ${onShelf ? "on the shelf at day 1" : "not stocked at day 1"}`;
+  chip.title = `${suppliable ? "suppliable" : "only from Robert's cart"},${onShelf ? "on the shelf at day 1" : "not stocked at day 1"}`;
   return chip;
 }
 

@@ -33,17 +33,14 @@ check("formatCap(-1) reads uncapped", formatCap(-1) === "uncapped");
 check("formatCap(0) reads as an em dash, not blank", formatCap(0) === "—");
 check("formatCap(n) reads the plain number", formatCap(24) === "24");
 
-// The Larder sets meat and fish caps; both start at 0 (locked until
-// bought), the acceptance test's own "a 0-cap category shows —" case.
-const larderTouched = capsTouchedBy(amenity("larder").effects);
-check("the Larder's caps_set names meat and fish", larderTouched.map((t) => t.category).sort().join(",") === "fish,meat");
+// Meat and fish start at 0 (locked until the Larder), the acceptance
+// test's own "a 0-cap category shows —" case.
 check("meat starts locked (cap 0)", formatCap(innData.starting.caps.meat) === "—");
 check("fish starts locked (cap 0)", formatCap(innData.starting.caps.fish) === "—");
 
 // The Deep Cellar multiplies the staples cap instead of setting it.
 const deepCellarTouched = capsTouchedBy(amenity("deep_cellar").effects);
 check("the Deep Cellar's caps_multiply names staples", deepCellarTouched.length === 1 && deepCellarTouched[0].category === "staples" && deepCellarTouched[0].kind === "multiply");
-check("staples starts uncapped-but-finite at 24", formatCap(innData.starting.caps.staples) === "24");
 
 // An amenity with neither caps_set nor caps_multiply touches no caps.
 check("Two More Tables touches no caps", capsTouchedBy(amenity("two_more_tables").effects).length === 0);

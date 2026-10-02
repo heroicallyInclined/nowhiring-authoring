@@ -2,7 +2,7 @@
 // shipped, not referenced by index.html. Run with:
 // node tools/prove-consequences.mjs
 //
-// Checks deadCategories, exclusiveConflicts and orphansFrom against the real
+// Checks unsuppliedCategories, exclusiveConflicts and orphansFrom against the real
 // sibling game checkout (../nowHiringHeroes), the same way tools/prove-*.mjs
 // already check Tasks 7 and 8. Uses structuredClone to build a `before`/
 // `after` pair for each case, mirroring how app.js's structuralConsequences()
@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { tableNames } from "./sibling.mjs";
 import { buildInverseIndex } from "../graph.js";
-import { deadCategories, exclusiveConflicts, orphansFrom, referrerSummary, idRowsField } from "../consequences.js";
+import { unsuppliedCategories, exclusiveConflicts, orphansFrom, referrerSummary, idRowsField } from "../consequences.js";
 
 const TABLE_NAMES = tableNames();
 
@@ -29,13 +29,13 @@ function check(label, condition) {
   if (!condition) failures++;
 }
 
-// --- deadCategories: staples is the real, already-established carve-out
+// --- unsuppliedCategories: staples is the real, already-established carve-out
 // (Task 7/8's own acceptance test) — no location supplies it today. Adding a
-// staples supply to a location should make it leave the dead list.
+// staples supply to a location should make it leave the unsupplied list.
 {
   const before = tables;
   const beforeIndex = buildInverseIndex(schemas, before);
-  check("staples is dead before any location supplies it", deadCategories(beforeIndex, schemas).includes("staples"));
+  check("staples is unsupplied before any location supplies it", unsuppliedCategories(beforeIndex, schemas).includes("staples"));
 
   const after = new Map(before);
   const locations = structuredClone(before.get("locations"));
@@ -43,7 +43,7 @@ function check(label, condition) {
   millpond.supplies.push({ category: "staples", amount: 2 });
   after.set("locations", locations);
   const afterIndex = buildInverseIndex(schemas, after);
-  check("staples leaves the dead list once a location supplies it", !deadCategories(afterIndex, schemas).includes("staples"));
+  check("staples leaves the unsupplied list once a location supplies it", !unsuppliedCategories(afterIndex, schemas).includes("staples"));
 }
 
 // --- exclusiveConflicts: old_millpond already supplies crops; adding the

@@ -135,11 +135,11 @@ function buildInterruptsSection(interruptsData) {
   const perDayTable = document.createElement("table");
   perDayTable.className = "evening-table";
   const perDayHead = document.createElement("tr");
-  for (const label of ["", "Count"]) {
-    const th = document.createElement("th");
-    th.textContent = label;
-    perDayHead.appendChild(th);
-  }
+  perDayHead.appendChild(document.createElement("th"));
+  const countsTh = document.createElement("th");
+  countsTh.textContent = "Count (weight)";
+  countsTh.colSpan = Math.max(...interruptsData.per_day.map((p) => p.counts.length));
+  perDayHead.appendChild(countsTh);
   const perDayThead = document.createElement("thead");
   perDayThead.appendChild(perDayHead);
   perDayTable.appendChild(perDayThead);
@@ -150,9 +150,15 @@ function buildInterruptsSection(interruptsData) {
     const th = document.createElement("th");
     th.textContent = formatDayRange(entry.from_day, entry.to_day);
     row.appendChild(th);
-    const td = document.createElement("td");
-    td.textContent = String(entry.count);
-    row.appendChild(td);
+    for (const option of entry.counts) {
+      const td = document.createElement("td");
+      td.appendChild(document.createTextNode(String(option.count)));
+      td.appendChild(document.createElement("br"));
+      const weight = document.createElement("small");
+      weight.textContent = `weight ${option.weight}`;
+      td.appendChild(weight);
+      row.appendChild(td);
+    }
     perDayBody.appendChild(row);
   }
   perDayTable.appendChild(perDayBody);
@@ -180,6 +186,7 @@ function buildInterruptsSection(interruptsData) {
   }
   typesTable.appendChild(typesBody);
   section.appendChild(typesTable);
+  section.appendChild(buildLabeledLine("Courier trade yield multiplier", `×${interruptsData.courier_trade.yield_multiplier}`));
 
   section.appendChild(buildLabeledLine("Defer stays chance", formatPercent(interruptsData.defer_stays_chance)));
 

@@ -48,9 +48,9 @@ const runData = JSON.parse(runText);
 }
 {
   const hypothetical = JSON.parse(JSON.stringify(locationsData));
-  hypothetical.entries.push({ supplies: [{ category: "staples", amount: 1 }], fittings: [], named_stock: [] }); // staples is dead, no conflict
+  hypothetical.entries.push({ supplies: [{ category: "staples", amount: 1 }], fittings: [], named_stock: [] }); // staples is unsupplied, no conflict
   const conflicts = exclusiveConflicts(null, new Map([["locations", hypothetical]]));
-  check("supplying the dead category has no conflict", conflicts.length === 0);
+  check("supplying the unsupplied category has no conflict", conflicts.length === 0);
 }
 
 // --- run.json half: rumor deck insertion ---

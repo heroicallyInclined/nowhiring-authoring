@@ -6,7 +6,7 @@ import { saveChanges } from "./save.js";
 import { lineDiff, hunks } from "./diff.js";
 import { pollChecks } from "./checks.js";
 import {
-  deadCategories, referrerSummary, exclusiveConflicts, orphansFrom, idRowsField,
+  unsuppliedCategories, referrerSummary, exclusiveConflicts, orphansFrom, idRowsField,
   dilutionChanges, ladderChanges,
 } from "./consequences.js";
 import { fetchWorldJson } from "./artifacts.js";
@@ -190,8 +190,8 @@ function structuralConsequences() {
 
   const lines = [];
 
-  for (const category of deadCategories(afterIndex, schemas)) {
-    lines.push(`No location supplies ${category} — nothing added there can be found.`);
+  for (const category of unsuppliedCategories(afterIndex, schemas)) {
+    lines.push(`No location supplies ${category} — only Robert's cart can bring it.`);
   }
 
   lines.push(...exclusiveConflicts(before, after));

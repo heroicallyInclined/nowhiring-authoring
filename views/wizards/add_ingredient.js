@@ -1,11 +1,11 @@
 import { spliceAddRow, spliceInsertIntoEmptyArray } from "../../splice.js";
-import { deadCategories } from "../../consequences.js";
+import { unsuppliedCategories } from "../../consequences.js";
 import { wizardStep, textField, selectField, continueButton, spliceAndVerify } from "./shell.js";
 
 // Add an ingredient (plans/authoring-tool-task10.md Task 10.3): name,
-// category, rarity, and — only when the category would otherwise stay
-// unreachable — one of three explicit ways to make it reachable, so a dead
-// category can never happen by accident the way it can through the Raw tab.
+// category, rarity, and — only when no location supplies the category — one
+// of three explicit choices, so a cart-only category can never happen by
+// accident the way it can through the Raw tab.
 export const TABLES = ["ingredients", "locations"];
 
 export function slugify(label) {
@@ -108,18 +108,18 @@ function formStep() {
 }
 
 // The one step every "add a row" wizard needs after its form: compute the
-// base table edit, and — only when the category is otherwise unreachable —
-// offer the three explicit ways plans/authoring-tool-task10.md names to fix
-// that, rather than letting a dead category happen by accident. This is one
+// base table edit, and — only when no location supplies the category —
+// offer the three explicit choices, rather than letting a cart-only category
+// happen by accident. This is one
 // step (not three) so "no third step" holds for the already-suppliable case.
 function finishStep() {
   return {
     render(ctx, state, next) {
       const { id, label, dishLabel, category, rarity } = state;
       const ingredientsEdit = addIngredientEdit(ctx.edited.get("ingredients"), { id, label, dishLabel, category, rarity });
-      const dead = deadCategories(ctx.index, ctx.schemas).includes(category);
+      const unsupplied = unsuppliedCategories(ctx.index, ctx.schemas).includes(category);
 
-      if (!dead) {
+      if (!unsupplied) {
         const note = document.createElement("p");
         note.textContent = `${category} is already reachable — nothing else to decide.`;
         const button = continueButton("Continue to review", () => {
@@ -130,7 +130,7 @@ function finishStep() {
 
       const locations = ctx.tables.get("locations").entries;
       const warning = document.createElement("p");
-      warning.textContent = `No location supplies ${category} — nothing added there could ever be found. Choose how ${label} reaches the world:`;
+      warning.textContent = `No location supplies ${category} — only Robert's cart can bring it. Choose how ${label} reaches the world:`;
 
       const container = document.createElement("div");
       let choice = "supplies";

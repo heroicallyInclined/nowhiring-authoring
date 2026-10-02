@@ -160,6 +160,8 @@ export function build(ctx) {
     for (const category of categories) {
       const th = document.createElement("th");
       th.textContent = category;
+      const supplied = locationsData.entries.some((l) => (l.supplies || []).some((s) => s.category === category));
+      if (!supplied) th.title = `No location supplies ${category} — only Robert's cart can bring it.`;
       headRow.appendChild(th);
     }
     const thead = document.createElement("thead");

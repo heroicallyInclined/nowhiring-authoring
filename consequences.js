@@ -26,15 +26,15 @@ export function idRowsField(schema) {
 }
 
 // Reused by views/menu.js's chip tint (Task 8.4) — moved here rather than
-// duplicated, since the dead-category check below is the same test.
+// duplicated, since the unsupplied-category check below is the same test.
 export function isSuppliable(index, category) {
   return referrersOf(index, category).some((r) => r.table === "locations");
 }
 
-// Every ingredient category no location supplies — nothing added there can
-// ever be found. Read off ingredients.schema.json's own category enum, never
+// Every ingredient category no location supplies — only Robert's cart can
+// bring it. Read off ingredients.schema.json's own category enum, never
 // re-authored.
-export function deadCategories(index, schemas) {
+export function unsuppliedCategories(index, schemas) {
   const categoryField = schemas.get("ingredients").fields.entries.item.fields.category;
   return (categoryField.values || []).filter((category) => !isSuppliable(index, category));
 }

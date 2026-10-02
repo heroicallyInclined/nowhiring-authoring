@@ -2,7 +2,7 @@ import { referrersOf } from "../graph.js";
 import { buildRarityBadge } from "./rarity.js";
 
 // The Pantry (plans/authoring-tool-task8.md Task 8.3): ingredients grouped by
-// category in ladder order, with rarity, buy/sell price, sourcing and dish
+// category in ladder order, with rarity, Robert's/sell price, sourcing and dish
 // usage read together. Read-only — the plan calls for no edit affordance
 // here, unlike the World grid's amount cells.
 //
@@ -30,10 +30,18 @@ export function locationSourcing(index, locationsData, ingredient) {
   return tags;
 }
 
-export function marketSourcing(pricesData, ingredient) {
+// Mirrors sim/rules/market.gd's `price_of`. MarketRules.EXCLUDED_FROM_ROLL is
+// code and not mirrored, so royal_venison shows a price it is never sold at.
+export function cartPriceOf(pricesData, marketData, ingredient) {
+  const marketRow = marketData.rarities[ingredient.rarity];
+  if (!marketRow || !marketRow.weight) return 0;
+  const basePrice = (pricesData.rarities[ingredient.rarity] || {}).base_price || 0;
+  return Math.ceil(basePrice * marketRow.markup);
+}
+
+export function marketSourcing(pricesData, marketData, ingredient) {
   const tags = [];
-  const buyRow = (pricesData.buy || []).find((b) => b.good === ingredient.id);
-  if (buyRow) tags.push(`Market — buy ${buyRow.price}g`);
+  if (cartPriceOf(pricesData, marketData, ingredient) > 0) tags.push("Robert's cart");
   for (const row of pricesData.service || []) {
     if (row.good === ingredient.id) tags.push(`Served as ${row.item} for ${row.price}g`);
   }
@@ -80,6 +88,7 @@ function buildRow(ctx, ingredient) {
   const locationsData = ctx.tables.get("locations");
   const pricesData = ctx.tables.get("prices");
   const recipesData = ctx.tables.get("recipes");
+  const marketData = ctx.tables.get("market");
 
   const tr = document.createElement("tr");
 
@@ -91,10 +100,10 @@ function buildRow(ctx, ingredient) {
   rarityCell.appendChild(buildRarityBadge(ingredient.rarity));
   tr.appendChild(rarityCell);
 
-  const buyRow = (pricesData.buy || []).find((b) => b.good === ingredient.id);
-  const buyCell = document.createElement("td");
-  buyCell.textContent = buyRow ? `${buyRow.price}g` : "—";
-  tr.appendChild(buyCell);
+  const cartCell = document.createElement("td");
+  const cartPrice = cartPriceOf(pricesData, marketData, ingredient);
+  cartCell.textContent = cartPrice > 0 ? `${cartPrice}g` : "—";
+  tr.appendChild(cartCell);
 
   const sellCell = document.createElement("td");
   const sellPrice = sellPriceOf(pricesData, ingredient);
@@ -102,7 +111,7 @@ function buildRow(ctx, ingredient) {
   tr.appendChild(sellCell);
 
   const sourcingCell = document.createElement("td");
-  const sourcingTags = [...locationSourcing(ctx.index, locationsData, ingredient), ...marketSourcing(pricesData, ingredient)];
+  const sourcingTags = [...locationSourcing(ctx.index, locationsData, ingredient), ...marketSourcing(pricesData, marketData, ingredient)];
   sourcingCell.appendChild(sourcingTags.length > 0 ? buildTagList(sourcingTags) : document.createTextNode("nowhere"));
   tr.appendChild(sourcingCell);
 
@@ -138,7 +147,7 @@ export function build(ctx) {
 
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    for (const label of ["Ingredient", "Rarity", "Buy", "Sell", "Sourcing", "Dishes"]) {
+    for (const label of ["Ingredient", "Rarity", "Robert", "Sell", "Sourcing", "Dishes"]) {
       const th = document.createElement("th");
       th.textContent = label;
       headRow.appendChild(th);

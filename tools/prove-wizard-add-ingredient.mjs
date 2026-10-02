@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import {
   slugify, addIngredientEdit, addToLocationSupplies, addAsTarget,
 } from "../views/wizards/add_ingredient.js";
-import { deadCategories } from "../consequences.js";
+import { unsuppliedCategories } from "../consequences.js";
 import { buildInverseIndex } from "../graph.js";
 import { tableNames } from "./sibling.mjs";
 
@@ -43,12 +43,12 @@ const index = buildInverseIndex(schemas, tables);
   const ingredientsText = loadTableText("ingredients");
   const spliced = addIngredientEdit(ingredientsText, { id: "fox", label: "Fox", category: "meat", rarity: "uncommon" });
   const parsed = JSON.parse(spliced);
-  check("meat is already suppliable", !deadCategories(index, schemas).includes("meat"));
+  check("meat is already suppliable", !unsuppliedCategories(index, schemas).includes("meat"));
   check("the new entry lands right after the last meat entry", parsed.entries.some((e) => e.id === "fox" && e.category === "meat"));
 }
 
-// --- staples is the real dead category today ---
-check("staples is dead today", deadCategories(index, schemas).includes("staples"));
+// --- staples is the real unsupplied category today ---
+check("staples is unsupplied today", unsuppliedCategories(index, schemas).includes("staples"));
 
 // --- branch 1: add to a location's supplies ---
 {

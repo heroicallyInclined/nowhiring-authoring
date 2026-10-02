@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { tableNames } from "./sibling.mjs";
 import { buildInverseIndex } from "../graph.js";
-import { locationSourcing, marketSourcing, dishesUsing, sellPriceOf } from "../views/pantry.js";
+import { locationSourcing, dishesUsing, sellPriceOf } from "../views/pantry.js";
 
 const TABLE_NAMES = tableNames();
 
@@ -40,15 +40,11 @@ function check(label, condition) {
 }
 
 // flour is a staple: no location supplies or targets it (the Task 7
-// carve-out), but prices.buy names it directly.
+// carve-out).
 const flour = ingredient("flour");
 check(
   "flour has no location referrer",
   locationSourcing(index, locationsData, flour).length === 0,
-);
-check(
-  "flour has a Market referrer from prices.buy",
-  marketSourcing(pricesData, flour).some((tag) => tag.includes("Market")),
 );
 
 // wheat is old_millpond's named target; carrots is the same category
