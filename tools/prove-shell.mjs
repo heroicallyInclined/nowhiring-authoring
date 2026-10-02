@@ -8,9 +8,11 @@
 // here against the real sibling game checkout (../nowHiringHeroes), the same
 // way tools/prove-graph.mjs checks Task 7.
 import { readFileSync } from "node:fs";
-import { TABLE_NAMES } from "../tables.js";
+import { tableNames } from "./sibling.mjs";
 import { buildInverseIndex } from "../graph.js";
 import { VIEWS } from "../views/shell.js";
+
+const TABLE_NAMES = tableNames();
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
 

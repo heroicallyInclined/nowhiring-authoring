@@ -23,7 +23,7 @@ import * as retire from "./wizards/retire.js";
 // both describe NPC identity — see "Found while working" in that plan file.
 export const VIEWS = [
   { key: "world", label: "The World", tables: ["locations", "ingredients"], build: buildWorld },
-  { key: "pantry", label: "The Pantry", tables: ["ingredients", "prices", "recipes"], build: buildPantry },
+  { key: "pantry", label: "The Pantry", tables: ["ingredients", "prices", "recipes", "market"], build: buildPantry },
   { key: "menu", label: "The Menu", tables: ["recipes", "inn"], build: buildMenu },
   { key: "board", label: "The Board", tables: ["objectives", "locations"], build: buildBoard },
   { key: "people", label: "The People", tables: ["archetypes", "quirks", "names"], build: buildPeople },
@@ -43,7 +43,7 @@ const WIZARDS = [
   { key: "add-location", label: "Add a location", tables: addLocation.TABLES, steps: addLocation.steps },
   { key: "add-dish", label: "Add a dish", tables: addDish.TABLES, steps: addDish.steps },
   { key: "add-objective", label: "Add an objective", tables: addObjective.TABLES, steps: addObjective.steps },
-  { key: "retire", label: "Retire…", tables: retire.TABLES, steps: retire.steps },
+  { key: "retire", label: "Retire…", steps: retire.steps },
 ];
 
 // Renders the nav plus the active view into a fresh element. `ctx` is
@@ -81,7 +81,7 @@ export function buildShell(ctx, activeKey, activeTab, onNavigate) {
   // table's Raw text parses (open question 3 in authoring-tool-task10.md,
   // settled here rather than deferred further).
   function tryOpenWizard(wizard) {
-    const invalid = wizard.tables.filter((name) => !isValidJSON(ctx.edited.get(name)));
+    const invalid = (wizard.tables ?? [...ctx.edited.keys()]).filter((name) => !isValidJSON(ctx.edited.get(name)));
     if (invalid.length > 0) {
       warning.textContent = `Fix the JSON in ${invalid.join(", ")} before running "${wizard.label}".`;
       return;

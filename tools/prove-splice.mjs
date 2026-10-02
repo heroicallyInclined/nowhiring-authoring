@@ -66,6 +66,7 @@ function check(label, condition) {
     label: "Fox",
     category: "meat",
     rarity: "uncommon",
+    icon: "res://ui/assets/icons/ingredients/meat.png",
   });
 
   const spliced = spliceAddRow(

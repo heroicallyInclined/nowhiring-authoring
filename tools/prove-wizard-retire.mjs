@@ -12,7 +12,9 @@
 import { readFileSync } from "node:fs";
 import { buildInverseIndex, referrersOf } from "../graph.js";
 import { locateOccurrences, retireEdit } from "../views/wizards/retire.js";
-import { TABLE_NAMES } from "../tables.js";
+import { tableNames } from "./sibling.mjs";
+
+const TABLE_NAMES = tableNames();
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
 function loadSchema(name) {

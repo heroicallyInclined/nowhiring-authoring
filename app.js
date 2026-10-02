@@ -129,8 +129,8 @@ function renderAuthedScreen(token) {
 
 async function checkTokenAndLoadTables(token, status, editor) {
   try {
-    const { sha, treeSha, expiry, tables } = await loadTables(token, ORG, REPO);
-    schemas = await loadSchemas(token, ORG, REPO, sha);
+    const { sha, treeSha, expiry, names, tables } = await loadTables(token, ORG, REPO);
+    schemas = await loadSchemas(token, ORG, REPO, sha, names);
     loaded = { sha, treeSha, tables };
     edited = new Map(tables);
     lastGoodParsed = new Map();

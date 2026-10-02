@@ -3,16 +3,18 @@
 // node tools/prove-wizard-add-ingredient.mjs
 //
 // add_ingredient.js's DOM steps can't run outside a browser, but the splice
-// logic behind them — addIngredientEdit, addToLocationSupplies, addAsTarget,
-// addToBuyOnly — is plain data over real text, checked here the same way
+// logic behind them — addIngredientEdit, addToLocationSupplies, addAsTarget —
+// is plain data over real text, checked here the same way
 // tools/prove-splice.mjs checks the primitives underneath it.
 import { readFileSync } from "node:fs";
 import {
-  slugify, addIngredientEdit, addToLocationSupplies, addAsTarget, addToBuyOnly,
+  slugify, addIngredientEdit, addToLocationSupplies, addAsTarget,
 } from "../views/wizards/add_ingredient.js";
 import { deadCategories } from "../consequences.js";
 import { buildInverseIndex } from "../graph.js";
-import { TABLE_NAMES } from "../tables.js";
+import { tableNames } from "./sibling.mjs";
+
+const TABLE_NAMES = tableNames();
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
 
@@ -80,14 +82,6 @@ check("staples is dead today", deadCategories(index, schemas).includes("staples"
     "target branch appends onto an existing targets array",
     parsed.entries[locationIndex].targets.some((t) => t.id === "salt" && t.category === "staples"),
   );
-}
-
-// --- branch 3: buy-only ---
-{
-  const pricesText = loadTableText("prices");
-  const spliced = addToBuyOnly(pricesText, "salt", 2);
-  const parsed = JSON.parse(spliced);
-  check("buy-only branch appends onto prices.buy", parsed.buy.some((b) => b.good === "salt" && b.price === 2));
 }
 
 console.log(failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`);

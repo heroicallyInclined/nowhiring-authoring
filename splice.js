@@ -28,8 +28,9 @@ export function spliceScalar(text, path, value) {
 // if given), applies scalar edits to the clone, and inserts it as a new row —
 // compaction and column alignment come from copying real bytes, never from
 // an emitter. `edits` is [{path: [...fieldPath], value}], paths relative to
-// the row itself.
-export function spliceAddRow(text, arrayPath, edits, afterIndex = -1) {
+// the row itself. `sourceIndex` clones a different sibling than the one the
+// row lands after — which sibling decides which optional keys the row has.
+export function spliceAddRow(text, arrayPath, edits, afterIndex = -1, sourceIndex = afterIndex) {
   const tree = parseTree(text);
   const arrayNode = findNodeAtLocation(tree, arrayPath);
   if (!arrayNode || arrayNode.type !== "array") {
@@ -39,11 +40,12 @@ export function spliceAddRow(text, arrayPath, edits, afterIndex = -1) {
   const siblingIndex = afterIndex < 0 ? children.length - 1 : afterIndex;
   const sibling = children[siblingIndex];
   const isLastElement = siblingIndex === children.length - 1;
+  const source = children[sourceIndex < 0 ? children.length - 1 : sourceIndex];
 
   const lineStart = text.lastIndexOf("\n", sibling.offset) + 1;
   const leading = text.slice(lineStart, sibling.offset);
 
-  let rowText = text.slice(sibling.offset, sibling.offset + sibling.length);
+  let rowText = text.slice(source.offset, source.offset + source.length);
   const rowTree = parseTree(rowText);
   // Apply from the highest offset down so earlier offsets stay valid as we splice.
   const rowEdits = edits

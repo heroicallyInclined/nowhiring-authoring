@@ -7,9 +7,11 @@
 // against the real sibling game checkout (../nowHiringHeroes), the same way
 // tools/prove-pantry.mjs checks Task 8.3.
 import { readFileSync } from "node:fs";
-import { TABLE_NAMES } from "../tables.js";
+import { tableNames } from "./sibling.mjs";
 import { buildInverseIndex } from "../graph.js";
 import { isSuppliable, isOnShelfAtDayOne } from "../views/menu.js";
+
+const TABLE_NAMES = tableNames();
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
 

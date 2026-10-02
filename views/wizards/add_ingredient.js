@@ -6,7 +6,7 @@ import { wizardStep, textField, selectField, continueButton, spliceAndVerify } f
 // category, rarity, and — only when the category would otherwise stay
 // unreachable — one of three explicit ways to make it reachable, so a dead
 // category can never happen by accident the way it can through the Raw tab.
-export const TABLES = ["ingredients", "locations", "prices"];
+export const TABLES = ["ingredients", "locations"];
 
 export function slugify(label) {
   return label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -18,20 +18,34 @@ function lastIndexOfCategory(entries, category) {
   return index;
 }
 
-// The base ingredients.json edit every path below shares — clone the last
-// ingredient already in the same category (8.2's row-clone convention).
-export function addIngredientEdit(ingredientsText, { id, label, category, rarity }) {
+// The clone source decides whether the new row has a `dish_label` key, so it
+// never has to be added or deleted: the last row with the same presence,
+// preferring the category.
+function cloneSourceIndex(entries, category, hasDishLabel) {
+  let inCategory = -1;
+  let anywhere = -1;
+  entries.forEach((entry, i) => {
+    if (("dish_label" in entry) !== hasDishLabel) return;
+    anywhere = i;
+    if (entry.category === category) inCategory = i;
+  });
+  return inCategory >= 0 ? inCategory : anywhere;
+}
+
+// The base ingredients.json edit every path below shares, inserted at the end
+// of its category. Every field is overwritten, so the clone source's own
+// values never reach the new row.
+export function addIngredientEdit(ingredientsText, { id, label, dishLabel, category, rarity }) {
   const entries = JSON.parse(ingredientsText).entries;
   const afterIndex = lastIndexOfCategory(entries, category);
+  const sourceIndex = cloneSourceIndex(entries, category, Boolean(dishLabel));
+  const row = { id, label, category, rarity, icon: `res://ui/assets/icons/ingredients/${category}.png` };
+  if (dishLabel) row.dish_label = dishLabel;
+  const edits = Object.entries(row).map(([key, value]) => ({ path: [key], value }));
   return spliceAndVerify(
     ingredientsText,
-    (intended) => { intended.entries.splice(afterIndex + 1, 0, { id, label, category, rarity }); },
-    (text) => spliceAddRow(
-      text,
-      ["entries"],
-      [{ path: ["id"], value: id }, { path: ["label"], value: label }, { path: ["rarity"], value: rarity }],
-      afterIndex,
-    ),
+    (intended) => { intended.entries.splice(afterIndex + 1, 0, row); },
+    (text) => spliceAddRow(text, ["entries"], edits, afterIndex, sourceIndex),
   );
 }
 
@@ -65,17 +79,7 @@ export function addAsTarget(locationsText, locationIndex, id, label, category, l
   );
 }
 
-export function addToBuyOnly(pricesText, good, price) {
-  const buy = JSON.parse(pricesText).buy;
-  return spliceAndVerify(
-    pricesText,
-    (intended) => { intended.buy.push({ good, price }); },
-    (text) => spliceAddRow(text, ["buy"], [
-      { path: ["good"], value: good },
-      { path: ["price"], value: price },
-    ], buy.length - 1),
-  );
-}
+const CART_ONLY = "Only Robert's cart brings it";
 
 function formStep() {
   return {
@@ -84,19 +88,21 @@ function formStep() {
       const rarities = ctx.schemas.get("ingredients").fields.entries.item.fields.rarity.values;
 
       let label = state.label ?? "";
+      let dishLabel = state.dishLabel ?? "";
       let category = state.category ?? categories[0];
       let rarity = state.rarity ?? rarities[0];
 
       const { row: labelRow } = textField("Name:", label, (value) => { label = value; });
+      const { row: dishLabelRow } = textField("Name in a dish (optional):", dishLabel, (value) => { dishLabel = value; });
       const { row: categoryRow } = selectField("Category:", categories, category, (value) => { category = value; });
       const { row: rarityRow } = selectField("Rarity:", rarities, rarity, (value) => { rarity = value; });
 
       const button = continueButton("Continue", () => {
         if (!label.trim()) return;
-        next({ label: label.trim(), id: slugify(label), category, rarity });
+        next({ label: label.trim(), dishLabel: dishLabel.trim(), id: slugify(label), category, rarity });
       });
 
-      return wizardStep("Add an ingredient", labelRow, categoryRow, rarityRow, button);
+      return wizardStep("Add an ingredient", labelRow, dishLabelRow, categoryRow, rarityRow, button);
     },
   };
 }
@@ -109,8 +115,8 @@ function formStep() {
 function finishStep() {
   return {
     render(ctx, state, next) {
-      const { id, label, category, rarity } = state;
-      const ingredientsEdit = addIngredientEdit(ctx.edited.get("ingredients"), { id, label, category, rarity });
+      const { id, label, dishLabel, category, rarity } = state;
+      const ingredientsEdit = addIngredientEdit(ctx.edited.get("ingredients"), { id, label, dishLabel, category, rarity });
       const dead = deadCategories(ctx.index, ctx.schemas).includes(category);
 
       if (!dead) {
@@ -132,7 +138,6 @@ function finishStep() {
       let amount = 1;
       let targetLabel = label;
       let leans = ctx.schemas.get("ingredients").fields.entries.item.fields.rarity.values[0];
-      let price = 2;
 
       const targetLocations = locations
         .map((location, index) => ({ location, index }))
@@ -168,15 +173,12 @@ function finishStep() {
           body.appendChild(locRow);
           body.appendChild(labelRow);
           body.appendChild(leansRow);
-        } else {
-          const { row: priceRow } = textField("Buy price:", String(price), (value) => { price = parseInt(value, 10) || 0; });
-          body.appendChild(priceRow);
         }
       }
 
       const { row: choiceRow } = selectField(
         "How does it reach the world?",
-        ["supplies", "target", "buy-only"],
+        ["supplies", "target", CART_ONLY],
         choice,
         (value) => { choice = value; renderChoiceBody(); },
       );
@@ -190,8 +192,6 @@ function finishStep() {
         } else if (choice === "target") {
           if (targetLocations.length === 0) return;
           edits.set("locations", addAsTarget(ctx.edited.get("locations"), locationIndex, id, targetLabel, category, leans));
-        } else {
-          edits.set("prices", addToBuyOnly(ctx.edited.get("prices"), id, price));
         }
         next({ edits });
       });

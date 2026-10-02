@@ -19,7 +19,7 @@ function slugify(label) {
 
 export function addDishEdit(recipesText, { id, label, categories }) {
   const parsed = JSON.parse(recipesText);
-  const cloneIndex = parsed.entries.findIndex((r) => r.slots.length === categories.length);
+  const cloneIndex = parsed.entries.findIndex((r) => r.slots.length === categories.length && !r.steps);
   if (cloneIndex < 0) throw new Error(`add_dish wizard: no existing recipe has ${categories.length} slots to clone`);
   const newIndex = cloneIndex + 1;
 

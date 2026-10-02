@@ -1,13 +1,11 @@
 import { spliceRemoveRow } from "../../splice.js";
 import { referrersOf, resolveVariant } from "../../graph.js";
 import { idRowsField } from "../../consequences.js";
-import { TABLE_NAMES } from "../../tables.js";
 import { wizardStep, selectField, continueButton } from "./shell.js";
 
 // Retire anything (plans/authoring-tool-task10.md Task 10.7): deleting any
 // row runs the inverse index first and shows every referrer before it can
 // proceed — a delete is never silent.
-export const TABLES = TABLE_NAMES;
 
 function formatRowLabel(template, item) {
   return template.replace(/\{(\w+)\}/g, (_, key) => item?.[key] ?? "");
@@ -16,7 +14,7 @@ function formatRowLabel(template, item) {
 // Every table with a row array a whole id identifies — the set "Retire
 // anything" can pick a row out of.
 function retirableTables(schemas) {
-  return TABLE_NAMES.filter((name) => idRowsField(schemas.get(name)));
+  return [...schemas.keys()].filter((name) => idRowsField(schemas.get(name)));
 }
 
 // A concrete walk for `targetId` (mirrors graph.js's own `walk`, but records

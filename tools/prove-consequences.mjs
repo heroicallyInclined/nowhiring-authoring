@@ -8,9 +8,11 @@
 // `after` pair for each case, mirroring how app.js's structuralConsequences()
 // diffs loaded.tables against edited.
 import { readFileSync } from "node:fs";
-import { TABLE_NAMES } from "../tables.js";
+import { tableNames } from "./sibling.mjs";
 import { buildInverseIndex } from "../graph.js";
 import { deadCategories, exclusiveConflicts, orphansFrom, referrerSummary, idRowsField } from "../consequences.js";
+
+const TABLE_NAMES = tableNames();
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
 
