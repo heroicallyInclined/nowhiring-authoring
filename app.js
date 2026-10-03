@@ -174,6 +174,7 @@ function buildContext() {
     schemas,
     index: buildInverseIndex(schemas, tables),
     edited,
+    original: loaded.tables,
     onEdit: (name, text) => edited.set(name, text),
   };
 }

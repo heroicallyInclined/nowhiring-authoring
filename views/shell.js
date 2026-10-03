@@ -8,6 +8,7 @@ import { build as buildInn } from "./inn.js";
 import { build as buildEvening } from "./evening.js";
 import { build as buildLetter } from "./letter.js";
 import { build as buildTuning } from "./tuning.js";
+import { build as buildWords } from "./words.js";
 import { runWizard } from "./wizards/shell.js";
 import * as addIngredient from "./wizards/add_ingredient.js";
 import * as addLocation from "./wizards/add_location.js";
@@ -31,6 +32,7 @@ export const VIEWS = [
   { key: "evening", label: "The Evening", tables: ["guest_schedule", "interrupts"], build: buildEvening },
   { key: "letter", label: "The Letter", tables: ["notice"], build: buildLetter },
   { key: "tuning", label: "Tuning", tables: ["bands", "attraction", "run"], build: buildTuning },
+  { key: "words", label: "Words", tables: ["strings"], build: buildWords },
 ];
 
 // One entry per Task 10 wizard, in the parent plan's own order. `tables` is
@@ -47,7 +49,7 @@ const WIZARDS = [
 ];
 
 // Renders the nav plus the active view into a fresh element. `ctx` is
-// `{ tables, schemas, index, edited, onEdit }`, rebuilt by app.js on every
+// `{ tables, schemas, index, edited, original, onEdit }`, rebuilt by app.js on every
 // navigation (plans/authoring-tool-task8.md's shared architecture decision).
 // `onNavigate(key, tab)` is only ever called with a tab GitHub's own data can
 // actually support switching to — see the Raw-tab guard below.

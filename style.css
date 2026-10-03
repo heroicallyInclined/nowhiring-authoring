@@ -668,6 +668,50 @@ body {
   font: inherit;
 }
 
+.words-section > summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 0.25rem 0;
+}
+
+.words-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0 0.2rem 0.75rem;
+  border-bottom: 1px solid var(--divider);
+}
+
+.words-key {
+  min-width: 14rem;
+  color: var(--text-muted);
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.words-text {
+  flex: 1;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+}
+
+.words-text:hover,
+.words-text:focus {
+  border-bottom-color: var(--border);
+}
+
+.words-edit-input {
+  flex: 1;
+  font: inherit;
+}
+
+.words-warning {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
 .consequences {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
