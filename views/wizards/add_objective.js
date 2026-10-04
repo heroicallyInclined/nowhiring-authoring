@@ -33,11 +33,11 @@ export function structurallyLooksEmpty(objective, location) {
   const weights = objective.yield_weights || {};
   const stockOk = (weights.stock ?? 1) !== 0
     && ((location.supplies || []).length > 0 || (location.named_stock || []).length > 0);
-  const fittingsOk = (weights.fittings ?? 1) !== 0 && (location.fittings || []).length > 0;
+  const materialsOk = (weights.materials ?? 1) !== 0 && (location.materials || []).length > 0;
   const addsOk = (objective.adds || []).some((a) => a.amount > 0);
   const rumorOk = objective.returns_rumor_on_success === true;
   const repOk = (objective.reputation_bonus || 0) > 0;
-  return !(stockOk || fittingsOk || addsOk || rumorOk || repOk);
+  return !(stockOk || materialsOk || addsOk || rumorOk || repOk);
 }
 
 export function locationsThatLookEmpty(objective, locationsData) {
@@ -45,7 +45,7 @@ export function locationsThatLookEmpty(objective, locationsData) {
 }
 
 export function addObjectiveEdit(objectivesText, {
-  id, name, knownFor, templateId, demands, stock, fittings, add, nothingToFind,
+  id, name, knownFor, templateId, demands, stock, materials, add, nothingToFind,
 }) {
   const parsed = JSON.parse(objectivesText);
   const templateIndex = parsed.entries.findIndex((o) => o.id === templateId);
@@ -59,7 +59,7 @@ export function addObjectiveEdit(objectivesText, {
   clone.name = name;
   clone.known_for = knownFor;
   for (const skill of Object.keys(clone.demands)) clone.demands[skill] = demands[skill];
-  clone.yield_weights = { stock, fittings };
+  clone.yield_weights = { stock, materials };
   if (add && clone.adds && clone.adds.length > 0) {
     clone.adds[0] = { ...clone.adds[0], good: add.good, amount: add.amount };
   }
@@ -72,7 +72,7 @@ export function addObjectiveEdit(objectivesText, {
     { path: ["known_for"], value: knownFor },
     ...Object.keys(template.demands).map((skill) => ({ path: ["demands", skill], value: demands[skill] })),
     { path: ["yield_weights", "stock"], value: stock },
-    { path: ["yield_weights", "fittings"], value: fittings },
+    { path: ["yield_weights", "materials"], value: materials },
   ];
   if (add && template.adds && template.adds.length > 0) {
     edits.push({ path: ["adds", 0, "good"], value: add.good }, { path: ["adds", 0, "amount"], value: add.amount });
@@ -150,14 +150,14 @@ function yieldsStep() {
     render(ctx, state, next) {
       const template = ctx.tables.get("objectives").entries.find((o) => o.id === state.templateId);
       let stock = template.yield_weights.stock;
-      let fittings = template.yield_weights.fittings;
+      let materials = template.yield_weights.materials;
 
       const { row: stockRow } = textField("Yield weight — stock:", String(stock), (value) => { stock = parseFloat(value) || 0; });
-      const { row: fittingsRow } = textField("Yield weight — fittings:", String(fittings), (value) => { fittings = parseFloat(value) || 0; });
+      const { row: materialsRow } = textField("Yield weight — materials:", String(materials), (value) => { materials = parseFloat(value) || 0; });
 
-      const button = continueButton("Continue", () => next({ stock, fittings }));
+      const button = continueButton("Continue", () => next({ stock, materials }));
 
-      return wizardStep("Add an objective — yield weights", stockRow, fittingsRow, button);
+      return wizardStep("Add an objective — yield weights", stockRow, materialsRow, button);
     },
   };
 }
@@ -197,7 +197,7 @@ function nothingToFindStep() {
       const locationsData = ctx.tables.get("locations");
 
       const draft = {
-        yield_weights: { stock: state.stock, fittings: state.fittings },
+        yield_weights: { stock: state.stock, materials: state.materials },
         adds: state.add ? [state.add] : (template.adds || []),
         returns_rumor_on_success: template.returns_rumor_on_success,
         reputation_bonus: template.reputation_bonus,
@@ -234,7 +234,7 @@ function finishStep() {
     render(ctx, state, next) {
       const edits = new Map([["objectives", addObjectiveEdit(ctx.edited.get("objectives"), {
         id: state.id, name: state.name, knownFor: state.knownFor, templateId: state.templateId,
-        demands: state.demands, stock: state.stock, fittings: state.fittings,
+        demands: state.demands, stock: state.stock, materials: state.materials,
         add: state.add, nothingToFind: state.nothingToFind,
       })]]);
       next({ edits });

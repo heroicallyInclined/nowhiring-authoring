@@ -12,8 +12,8 @@ export const TABLES = ["locations", "run"];
 // old_millpond is the one location the deck-order test itself hardcodes as
 // the implicit starting bound (test_the_ladder_runs_outward_in_the_rumor_decks_order
 // reads its distance directly, not a generically-named "starting location")
-// and the one entry with empty demands/tags/fittings — the only sibling
-// whose clone needs no fittings/demands cleanup, only targets/named_stock/
+// and the one entry with empty demands/tags/materials — the only sibling
+// whose clone needs no materials/demands cleanup, only targets/named_stock/
 // supplies, all of which the wizard's own edits already replace outright.
 const CLONE_SOURCE_ID = "old_millpond";
 

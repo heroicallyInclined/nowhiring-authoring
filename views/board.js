@@ -3,7 +3,7 @@
 // the same sum sim/model/quest.gd's `base_demands()` computes, objective
 // demands plus location demands, per skill -- and the objective's own
 // `adds[]`, if it has any, tagged by whether this location's targets,
-// named_stock or fittings name that exact good.
+// named_stock or materials name that exact good.
 //
 // That match is a plain id-level presence check, not `Returns.returns_nothing`
 // (a floored, weighted, probabilistic yields-to-nothing check the parent plan
@@ -20,7 +20,7 @@ function combinedDemands(skillOrder, objective, location) {
 }
 
 function addMatchesLocation(add, location) {
-  if (add.category === "fittings") return (location.fittings || []).some((f) => f.good === add.good);
+  if (add.category === "materials") return (location.materials || []).some((f) => f.good === add.good);
   return (location.targets || []).some((t) => t.id === add.good)
     || (location.named_stock || []).some((n) => n.good === add.good);
 }
@@ -87,7 +87,7 @@ function buildObjectiveHeader(objective) {
 
   const weights = document.createElement("div");
   weights.className = "yield-weights";
-  weights.textContent = `stock ${objective.yield_weights.stock} · fittings ${objective.yield_weights.fittings}`;
+  weights.textContent = `stock ${objective.yield_weights.stock} · materials ${objective.yield_weights.materials}`;
   th.appendChild(weights);
 
   return th;

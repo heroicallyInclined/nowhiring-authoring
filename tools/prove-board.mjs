@@ -42,10 +42,10 @@ check("combined demands sum per skill, in schema order", demands.join(", ") === 
 // location reads as "not applicable" rather than "no overlap".
 check("an objective with no adds[] is never flagged", addsOverlap(objective("run_the_errand"), location("old_millpond")) === null);
 
-// retrieve_the_heirloom adds curios (fittings). Only the Barrow Rows'
-// fittings line names curios; Ashen Wood's (timber, hides) doesn't.
-check("adds[] overlaps a location whose fittings name the same good", addsOverlap(objective("retrieve_the_heirloom"), location("barrow_rows")) === true);
-check("adds[] does not overlap a location with no matching fittings", addsOverlap(objective("retrieve_the_heirloom"), location("ashen_wood")) === false);
+// retrieve_the_heirloom adds curios (materials). Only the Barrow Rows'
+// materials line names curios; Ashen Wood's (timber, hides) doesn't.
+check("adds[] overlaps a location whose materials name the same good", addsOverlap(objective("retrieve_the_heirloom"), location("barrow_rows")) === true);
+check("adds[] does not overlap a location with no matching materials", addsOverlap(objective("retrieve_the_heirloom"), location("ashen_wood")) === false);
 
 // raid_the_smugglers_cellar adds wine (stock). Only the Drowned Vineyard's
 // named_stock names wine; the Old Millpond's (hops) doesn't.

@@ -23,7 +23,7 @@ const locationsData = JSON.parse(loadTableText("locations"));
 {
   const spliced = addObjectiveEdit(objectivesText, {
     id: "test_objective", name: "Test Objective", knownFor: "A test.",
-    templateId: "cull_the_nest", demands: { violence: 5 }, stock: 0.75, fittings: 0.25,
+    templateId: "cull_the_nest", demands: { violence: 5 }, stock: 0.75, materials: 0.25,
     add: null, nothingToFind: undefined,
   });
   const parsed = JSON.parse(spliced);
@@ -31,7 +31,7 @@ const locationsData = JSON.parse(loadTableText("locations"));
   check("the new objective exists right after its template", parsed.entries[objectivesData.entries.findIndex((o) => o.id === "cull_the_nest") + 1].id === "test_objective");
   check("it keeps the template's demand skill set", Object.keys(added.demands).join(",") === "violence");
   check("it carries the tuned demand amount", added.demands.violence === 5);
-  check("it carries the tuned yield weights", added.yield_weights.stock === 0.75 && added.yield_weights.fittings === 0.25);
+  check("it carries the tuned yield weights", added.yield_weights.stock === 0.75 && added.yield_weights.materials === 0.25);
   check("it carries no nothing_to_find (cull_the_nest has none)", !("nothing_to_find" in added));
   check("it carries no adds (cull_the_nest has none)", !("adds" in added));
   check("every other objective is untouched", parsed.entries.length === objectivesData.entries.length + 1);
@@ -41,7 +41,7 @@ const locationsData = JSON.parse(loadTableText("locations"));
 {
   const spliced = addObjectiveEdit(objectivesText, {
     id: "test_objective2", name: "Test Objective 2", knownFor: "A test.",
-    templateId: "delve_the_ruin", demands: { wits: 2, nerve: 1 }, stock: 1, fittings: 1,
+    templateId: "delve_the_ruin", demands: { wits: 2, nerve: 1 }, stock: 1, materials: 1,
     add: null, nothingToFind: "Nothing left at %s.",
   });
   const added = JSON.parse(spliced).entries.find((o) => o.id === "test_objective2");
@@ -53,21 +53,21 @@ const locationsData = JSON.parse(loadTableText("locations"));
 {
   const spliced = addObjectiveEdit(objectivesText, {
     id: "test_objective3", name: "Test Objective 3", knownFor: "A test.",
-    templateId: "hunt_the_great_beast", demands: { violence: 5, nerve: 3 }, stock: 1, fittings: 1,
-    add: { good: "curios", amount: 2, category: "fittings" }, nothingToFind: undefined,
+    templateId: "hunt_the_great_beast", demands: { violence: 5, nerve: 3 }, stock: 1, materials: 1,
+    add: { good: "curios", amount: 2, category: "materials" }, nothingToFind: undefined,
   });
   const added = JSON.parse(spliced).entries.find((o) => o.id === "test_objective3");
   check("it carries the tuned adds line", added.adds[0].good === "curios" && added.adds[0].amount === 2);
-  check("the adds line's category is unchanged (fittings)", added.adds[0].category === "fittings");
+  check("the adds line's category is unchanged (materials)", added.adds[0].category === "materials");
 }
 
 // --- the heuristic reads real content plausibly ---
 {
-  // escort_the_caravan: stock 1.5, fittings 0 -- weights to something at any
-  // location with supplies or named_stock, nothing at a fittings-only one.
+  // escort_the_caravan: stock 1.5, materials 0 -- weights to something at any
+  // location with supplies or named_stock, nothing at a materials-only one.
   const escort = objectivesData.entries.find((o) => o.id === "escort_the_caravan");
-  const barrowRows = locationsData.entries.find((l) => l.id === "barrow_rows"); // supplies:[], named_stock:[], fittings:[silver,curios]
-  check("escort_the_caravan structurally looks empty at the fittings-only Barrow Rows", structurallyLooksEmpty(escort, barrowRows));
+  const barrowRows = locationsData.entries.find((l) => l.id === "barrow_rows"); // supplies:[], named_stock:[], materials:[silver,curios]
+  check("escort_the_caravan structurally looks empty at the materials-only Barrow Rows", structurallyLooksEmpty(escort, barrowRows));
 
   const oldMillpond = locationsData.entries.find((l) => l.id === "old_millpond"); // supplies non-empty
   check("escort_the_caravan doesn't look empty at a location with supplies", !structurallyLooksEmpty(escort, oldMillpond));
