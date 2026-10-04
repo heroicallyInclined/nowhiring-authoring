@@ -63,17 +63,17 @@ const locationsData = JSON.parse(loadTableText("locations"));
 
 // --- the heuristic reads real content plausibly ---
 {
-  // escort_the_caravan: stock 1.5, materials 0 -- weights to something at any
-  // location with supplies or named_stock, nothing at a materials-only one.
-  const escort = objectivesData.entries.find((o) => o.id === "escort_the_caravan");
-  const barrowRows = locationsData.entries.find((l) => l.id === "barrow_rows"); // supplies:[], named_stock:[], materials:[silver,curios]
-  check("escort_the_caravan structurally looks empty at the materials-only Barrow Rows", structurallyLooksEmpty(escort, barrowRows));
+  // delve_the_ruin: stock 0, materials 1.5 -- weights to something only where
+  // a location has materials.
+  const delve = objectivesData.entries.find((o) => o.id === "delve_the_ruin");
+  const oldMillpond = locationsData.entries.find((l) => l.id === "old_millpond"); // materials:[]
+  check("delve_the_ruin structurally looks empty at Old Millpond, which has no materials", structurallyLooksEmpty(delve, oldMillpond));
 
-  const oldMillpond = locationsData.entries.find((l) => l.id === "old_millpond"); // supplies non-empty
-  check("escort_the_caravan doesn't look empty at a location with supplies", !structurallyLooksEmpty(escort, oldMillpond));
+  const barrowRows = locationsData.entries.find((l) => l.id === "barrow_rows"); // materials:[silver,curios]
+  check("delve_the_ruin doesn't look empty at a location with materials", !structurallyLooksEmpty(delve, barrowRows));
 
-  const emptyAt = locationsThatLookEmpty(escort, locationsData);
-  check("locationsThatLookEmpty names Barrow Rows for escort_the_caravan", emptyAt.includes("barrow_rows"));
+  const emptyAt = locationsThatLookEmpty(delve, locationsData);
+  check("locationsThatLookEmpty names Old Millpond for delve_the_ruin", emptyAt.includes("old_millpond"));
 
   // map_the_far_reaches returns a rumor regardless of yields -- never looks empty anywhere.
   const mapFarReaches = objectivesData.entries.find((o) => o.id === "map_the_far_reaches");

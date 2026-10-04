@@ -58,12 +58,5 @@ check(
     referrersOf(index, "meat").some((r) => r.table === "recipes"),
 );
 
-// staples is the carve-out the plan names explicitly: no location supplies
-// it, so nothing in `locations` should point at it.
-check(
-  "staples has no location referrer (the deliberate carve-out)",
-  !referrersOf(index, "staples").some((r) => r.table === "locations"),
-);
-
 console.log(failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`);
 process.exit(failures === 0 ? 0 : 1);

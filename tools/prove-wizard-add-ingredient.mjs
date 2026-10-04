@@ -11,6 +11,7 @@ import {
   slugify, addIngredientEdit, addToLocationSupplies, addAsTarget,
 } from "../views/wizards/add_ingredient.js";
 import { unsuppliedCategories } from "../consequences.js";
+import { spliceRemoveRow } from "../splice.js";
 import { buildInverseIndex } from "../graph.js";
 import { tableNames } from "./sibling.mjs";
 
@@ -47,9 +48,6 @@ const index = buildInverseIndex(schemas, tables);
   check("the new entry lands right after the last meat entry", parsed.entries.some((e) => e.id === "fox" && e.category === "meat"));
 }
 
-// --- staples is the real unsupplied category today ---
-check("staples is unsupplied today", unsuppliedCategories(index, schemas).includes("staples"));
-
 // --- branch 1: add to a location's supplies ---
 {
   const locationsText = loadTableText("locations");
@@ -62,8 +60,9 @@ check("staples is unsupplied today", unsuppliedCategories(index, schemas).includ
     parsed.entries[locationIndex].supplies.some((s) => s.category === "staples" && s.amount === 3),
   );
 
-  const emptyIndex = locationsData.entries.findIndex((l) => l.id === "drowned_vineyard"); // supplies empty
-  const splicedEmpty = addToLocationSupplies(locationsText, emptyIndex, "staples", 2);
+  const emptyIndex = locationsData.entries.findIndex((l) => l.id === "drowned_vineyard"); // one supply row
+  const emptiedText = spliceRemoveRow(locationsText, ["entries", emptyIndex, "supplies"], 0);
+  const splicedEmpty = addToLocationSupplies(emptiedText, emptyIndex, "staples", 2);
   const parsedEmpty = JSON.parse(splicedEmpty);
   check(
     "supplies branch handles an empty supplies array",

@@ -3,7 +3,7 @@
 // node tools/prove-pantry.mjs
 //
 // pantry.js builds DOM elements for the table itself, but the logic behind
-// its acceptance check — the staples carve-out, and a target reading as
+// its acceptance check — a target reading as
 // more specific than its supplying category — is plain data and is checked
 // here against the real sibling game checkout (../nowHiringHeroes), the same
 // way tools/prove-graph.mjs checks Task 7.
@@ -39,13 +39,7 @@ function check(label, condition) {
   if (!condition) failures++;
 }
 
-// flour is a staple: no location supplies or targets it (the Task 7
-// carve-out).
 const flour = ingredient("flour");
-check(
-  "flour has no location referrer",
-  locationSourcing(index, locationsData, flour).length === 0,
-);
 
 // wheat is old_millpond's named target; carrots is the same category
 // (crops) but not named anywhere — it should read as a plain supplier,

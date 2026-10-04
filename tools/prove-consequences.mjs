@@ -29,11 +29,13 @@ function check(label, condition) {
   if (!condition) failures++;
 }
 
-// --- unsuppliedCategories: staples is the real, already-established carve-out
-// (Task 7/8's own acceptance test) — no location supplies it today. Adding a
-// staples supply to a location should make it leave the unsupplied list.
+// --- unsuppliedCategories: every location supplies staples today, so strip
+// them to get an unsupplied category, then add one back.
 {
-  const before = tables;
+  const before = new Map(tables);
+  const stripped = structuredClone(tables.get("locations"));
+  for (const l of stripped.entries) l.supplies = l.supplies.filter((s) => s.category !== "staples");
+  before.set("locations", stripped);
   const beforeIndex = buildInverseIndex(schemas, before);
   check("staples is unsupplied before any location supplies it", unsuppliedCategories(beforeIndex, schemas).includes("staples"));
 

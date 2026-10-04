@@ -31,9 +31,7 @@ function check(label, condition) {
   if (!condition) failures++;
 }
 
-// staples: no location supplies it, only the cart (World grid's empty column, Task
-// 8.2's own acceptance test), and the shelf holds it from day 1.
-check("staples is not suppliable", isSuppliable(index, "staples") === false);
+// staples: the shelf holds it from day 1.
 check("staples is on the shelf at day 1", isOnShelfAtDayOne(innData, "staples") === true);
 
 // crops: old_millpond supplies it, and it's on the shelf from day 1.
