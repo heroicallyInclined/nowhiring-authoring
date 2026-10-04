@@ -51,6 +51,47 @@ export function walkField(field, data, path, label) {
   return { kind: "scalar", label, path, value: data, field };
 }
 
+// Click-to-edit, mirrors world.js's/letter.js's editInline: Enter/blur
+// commits (skipped if unchanged or, for int/number, unparseable), Escape
+// cancels. `done` guards the native blur a removed, focused input fires.
+// Exported so materials.js shares it rather than writing another copy.
+export function editInline(anchor, initialValue, fieldType, onCommit, onCancel) {
+  const input = document.createElement("input");
+  input.type = fieldType === "int" || fieldType === "number" ? "number" : "text";
+  if (fieldType === "number") input.step = "any";
+  input.className = "tuning-edit-input";
+  input.value = initialValue;
+  anchor.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  function finish(shouldCommit) {
+    if (done) return;
+    done = true;
+    if (!shouldCommit) {
+      onCancel();
+      return;
+    }
+    let value = input.value;
+    let valid = value.trim() !== "";
+    if (fieldType === "int") {
+      value = parseInt(input.value, 10);
+      valid = Number.isInteger(value);
+    } else if (fieldType === "number") {
+      value = parseFloat(input.value);
+      valid = Number.isFinite(value);
+    }
+    if (valid && value !== initialValue) onCommit(value);
+    else onCancel();
+  }
+  input.addEventListener("blur", () => finish(true));
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") finish(true);
+    else if (event.key === "Escape") finish(false);
+  });
+}
+
 export function build(ctx) {
   const tableNames = ["bands", "attraction", "run"];
 
@@ -68,46 +109,6 @@ export function build(ctx) {
     if (!verdict.ok) throw new Error(`Tuning view: ${verdict.reason}`);
     ctx.onEdit(table, newText);
     rerender();
-  }
-
-  // Click-to-edit, mirrors world.js's/letter.js's editInline: Enter/blur
-  // commits (skipped if unchanged or, for int/number, unparseable), Escape
-  // cancels. `done` guards the native blur a removed, focused input fires.
-  function editInline(anchor, initialValue, fieldType, onCommit) {
-    const input = document.createElement("input");
-    input.type = fieldType === "int" || fieldType === "number" ? "number" : "text";
-    if (fieldType === "number") input.step = "any";
-    input.className = "tuning-edit-input";
-    input.value = initialValue;
-    anchor.replaceWith(input);
-    input.focus();
-    input.select();
-
-    let done = false;
-    function finish(shouldCommit) {
-      if (done) return;
-      done = true;
-      if (!shouldCommit) {
-        rerender();
-        return;
-      }
-      let value = input.value;
-      let valid = value.trim() !== "";
-      if (fieldType === "int") {
-        value = parseInt(input.value, 10);
-        valid = Number.isInteger(value);
-      } else if (fieldType === "number") {
-        value = parseFloat(input.value);
-        valid = Number.isFinite(value);
-      }
-      if (valid && value !== initialValue) onCommit(value);
-      else rerender();
-    }
-    input.addEventListener("blur", () => finish(true));
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") finish(true);
-      else if (event.key === "Escape") finish(false);
-    });
   }
 
   function buildScalarNode(table, node) {
@@ -141,7 +142,7 @@ export function build(ctx) {
     button.className = "tuning-value";
     button.textContent = String(value);
     button.addEventListener("click", () => {
-      editInline(button, value, field.type, (newValue) => commit(table, path, newValue));
+      editInline(button, value, field.type, (newValue) => commit(table, path, newValue), rerender);
     });
     return button;
   }

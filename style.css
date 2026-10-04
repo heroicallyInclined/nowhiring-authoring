@@ -525,6 +525,30 @@ body {
   border-radius: 3px;
 }
 
+.materials-weights,
+.materials-block {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.materials-view ul {
+  list-style: none;
+  margin: 0.25rem 0;
+  padding: 0;
+}
+
+.materials-view h4 {
+  margin: 0.5rem 0 0;
+}
+
+.materials-line {
+  padding: 0.1rem 0;
+}
+
+.materials-picker {
+  margin: 0.25rem 0;
+}
+
 .evening-section {
   margin-bottom: 1.5rem;
 }

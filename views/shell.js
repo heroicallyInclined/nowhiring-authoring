@@ -5,6 +5,7 @@ import { build as buildMenu } from "./menu.js";
 import { build as buildBoard } from "./board.js";
 import { build as buildPeople } from "./people.js";
 import { build as buildInn } from "./inn.js";
+import { build as buildMaterials } from "./materials.js";
 import { build as buildEvening } from "./evening.js";
 import { build as buildLetter } from "./letter.js";
 import { build as buildTuning } from "./tuning.js";
@@ -29,6 +30,7 @@ export const VIEWS = [
   { key: "board", label: "The Board", tables: ["objectives", "locations"], build: buildBoard },
   { key: "people", label: "The People", tables: ["archetypes", "quirks", "names"], build: buildPeople },
   { key: "inn", label: "The Inn", tables: ["amenities", "inn"], build: buildInn },
+  { key: "materials", label: "The Materials", tables: ["prices", "locations", "objectives", "amenities"], build: buildMaterials },
   { key: "evening", label: "The Evening", tables: ["guest_schedule", "interrupts"], build: buildEvening },
   { key: "letter", label: "The Letter", tables: ["notice"], build: buildLetter },
   { key: "tuning", label: "Tuning", tables: ["bands", "attraction", "run"], build: buildTuning },
