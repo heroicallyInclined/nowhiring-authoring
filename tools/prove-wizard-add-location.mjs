@@ -5,7 +5,6 @@ import { readFileSync } from "node:fs";
 import {
   addLocationEdit, insertIntoRumorDeck, validRumorDeckPositions,
 } from "../views/wizards/add_location.js";
-import { exclusiveConflicts } from "../consequences.js";
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
 function loadTableText(name) {
@@ -35,22 +34,8 @@ const runData = JSON.parse(runText);
   check("its targets is empty, not old_millpond's wheat/turnips", newEntry.targets.length === 0);
   check("its demands is still {} (inherited from old_millpond, unedited)", Object.keys(newEntry.demands).length === 0);
   check("it's marked rumor-unlocked, unlike old_millpond itself", newEntry.unlock.rumor === true);
-  check("old_millpond itself is untouched", parsed.entries[0].id === "old_millpond" && parsed.entries[0].supplies.length === 1);
+  check("old_millpond itself is untouched", JSON.stringify(parsed.entries[0]) === JSON.stringify(locationsData.entries[0]));
   check("every other location is untouched", parsed.entries.length === locationsData.entries.length + 1);
-}
-
-// --- exclusiveConflicts refuses an already-supplied category ---
-{
-  const hypothetical = JSON.parse(JSON.stringify(locationsData));
-  hypothetical.entries.push({ supplies: [{ category: "crops", amount: 1 }], fittings: [], named_stock: [] }); // crops already old_millpond's
-  const conflicts = exclusiveConflicts(null, new Map([["locations", hypothetical]]));
-  check("supplying an already-exclusive category is refused by name", conflicts.some((c) => c.includes("crops") && c.includes("old_millpond")));
-}
-{
-  const hypothetical = JSON.parse(JSON.stringify(locationsData));
-  hypothetical.entries.push({ supplies: [{ category: "staples", amount: 1 }], fittings: [], named_stock: [] }); // staples is unsupplied, no conflict
-  const conflicts = exclusiveConflicts(null, new Map([["locations", hypothetical]]));
-  check("supplying the unsupplied category has no conflict", conflicts.length === 0);
 }
 
 // --- run.json half: rumor deck insertion ---

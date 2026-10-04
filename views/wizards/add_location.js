@@ -1,6 +1,5 @@
 import { parseTree, findNodeAtLocation } from "../../vendor/jsonc-parser/main.js";
 import { spliceAddRow, spliceRemoveRow, verifySplice } from "../../splice.js";
-import { exclusiveConflicts } from "../../consequences.js";
 import { addToLocationSupplies } from "./add_ingredient.js";
 import { wizardStep, textField, selectField, continueButton } from "./shell.js";
 
@@ -52,16 +51,15 @@ export function addLocationEdit(locationsText, { id, name, distance, category, a
     { path: ["unlock", "rumor"], value: true },
   ], cloneIndex);
 
-  text = spliceRemoveRow(text, ["entries", newIndex, "named_stock"], 0);
-  // old_millpond's targets has two entries — remove the last, then the only
-  // remaining one, each a valid spliceRemoveRow case on its own.
-  text = spliceRemoveRow(text, ["entries", newIndex, "targets"], 1);
-  text = spliceRemoveRow(text, ["entries", newIndex, "targets"], 0);
-  // old_millpond's own supplies (crops) is cleared the same way before the
-  // wizard's chosen category goes in via addToLocationSupplies (reused
-  // unchanged from add_ingredient.js) — otherwise the clone would keep
-  // supplying crops alongside whatever the co-author actually chose.
-  text = spliceRemoveRow(text, ["entries", newIndex, "supplies"], 0);
+  // Last row first, so every removal is a valid spliceRemoveRow case on its
+  // own. supplies is cleared too before the wizard's chosen category goes in,
+  // otherwise the clone would keep old_millpond's supplies alongside it.
+  const source = parsed.entries[cloneIndex];
+  for (const field of ["named_stock", "targets", "supplies"]) {
+    for (let i = source[field].length - 1; i >= 0; i--) {
+      text = spliceRemoveRow(text, ["entries", newIndex, field], i);
+    }
+  }
   text = addToLocationSupplies(text, newIndex, category, amount);
 
   const verdict = verifySplice(text, intended);
@@ -154,30 +152,16 @@ function suppliesStep() {
   return {
     render(ctx, state, next) {
       const categories = ctx.schemas.get("ingredients").fields.entries.item.fields.category.values;
-      const locationsData = ctx.tables.get("locations");
 
       let category = state.category ?? categories[0];
       let amount = 4;
 
-      const conflictNote = document.createElement("p");
-      function refreshConflict() {
-        const hypothetical = JSON.parse(JSON.stringify(locationsData));
-        hypothetical.entries.push({ supplies: [{ category, amount: 1 }], fittings: [], named_stock: [] });
-        const conflicts = exclusiveConflicts(null, new Map([["locations", hypothetical]]));
-        conflictNote.textContent = conflicts.join(" ");
-        button.disabled = conflicts.length > 0;
-      }
-
-      const { row: categoryRow } = selectField("Supplies category:", categories, category, (value) => {
-        category = value;
-        refreshConflict();
-      });
+      const { row: categoryRow } = selectField("Supplies category:", categories, category, (value) => { category = value; });
       const { row: amountRow } = textField("Amount:", String(amount), (value) => { amount = parseInt(value, 10) || 0; });
 
       const button = continueButton("Continue", () => next({ category, amount }));
-      refreshConflict();
 
-      return wizardStep("Add a location — what it supplies", categoryRow, amountRow, conflictNote, button);
+      return wizardStep("Add a location — what it supplies", categoryRow, amountRow, button);
     },
   };
 }

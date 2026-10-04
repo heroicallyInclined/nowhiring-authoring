@@ -2,7 +2,7 @@
 // shipped, not referenced by index.html. Run with:
 // node tools/prove-consequences.mjs
 //
-// Checks unsuppliedCategories, exclusiveConflicts and orphansFrom against the real
+// Checks unsuppliedCategories and orphansFrom against the real
 // sibling game checkout (../nowHiringHeroes), the same way tools/prove-*.mjs
 // already check Tasks 7 and 8. Uses structuredClone to build a `before`/
 // `after` pair for each case, mirroring how app.js's structuralConsequences()
@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { tableNames } from "./sibling.mjs";
 import { buildInverseIndex } from "../graph.js";
-import { unsuppliedCategories, exclusiveConflicts, orphansFrom, referrerSummary, idRowsField } from "../consequences.js";
+import { unsuppliedCategories, orphansFrom, referrerSummary, idRowsField } from "../consequences.js";
 
 const TABLE_NAMES = tableNames();
 
@@ -44,24 +44,6 @@ function check(label, condition) {
   after.set("locations", locations);
   const afterIndex = buildInverseIndex(schemas, after);
   check("staples leaves the unsupplied list once a location supplies it", !unsuppliedCategories(afterIndex, schemas).includes("staples"));
-}
-
-// --- exclusiveConflicts: old_millpond already supplies crops; adding the
-// same category to drowned_vineyard (currently []) should conflict.
-{
-  const before = tables;
-  const after = new Map(before);
-  const locations = structuredClone(before.get("locations"));
-  const vineyard = locations.entries.find((l) => l.id === "drowned_vineyard");
-  vineyard.supplies.push({ category: "crops", amount: 3 });
-  after.set("locations", locations);
-
-  const conflicts = exclusiveConflicts(before, after);
-  check(
-    "a second crops supplier is flagged by name",
-    conflicts.some((line) => line.includes("crops") && line.includes("old_millpond") && line.includes("drowned_vineyard")),
-  );
-  check("no conflict exists before the edit", exclusiveConflicts(before, before).length === 0);
 }
 
 // --- orphansFrom: deleting barrow_rows (named in run.rumor_deck, per the

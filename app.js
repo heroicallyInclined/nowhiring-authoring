@@ -6,7 +6,7 @@ import { saveChanges } from "./save.js";
 import { lineDiff, hunks } from "./diff.js";
 import { pollChecks } from "./checks.js";
 import {
-  unsuppliedCategories, referrerSummary, exclusiveConflicts, orphansFrom, idRowsField,
+  unsuppliedCategories, referrerSummary, orphansFrom, idRowsField,
   dilutionChanges, ladderChanges,
 } from "./consequences.js";
 import { fetchWorldJson } from "./artifacts.js";
@@ -195,7 +195,6 @@ function structuralConsequences() {
     lines.push(`No location supplies ${category} — only Robert's cart can bring it.`);
   }
 
-  lines.push(...exclusiveConflicts(before, after));
   lines.push(...orphansFrom(schemas, beforeIndex, before, after));
 
   for (const [table, schema] of schemas) {

@@ -63,41 +63,6 @@ export function referrerSummary(index, id) {
   return parts.join(" and ");
 }
 
-// The one check that reads test_content_tables.gd's own exclusivity rule
-// (test_every_location_is_the_exclusive_source_of_its_named_goods_and_categories)
-// structurally: a good or category now supplied by more than one location.
-// Reads `after`'s locations.json directly — location-to-location, not a
-// referrer lookup, so the inverse index isn't involved.
-export function exclusiveConflicts(before, after) {
-  const locations = after.get("locations");
-  if (!locations) return [];
-
-  const goodSource = new Map();
-  const categorySource = new Map();
-  const conflicts = [];
-
-  for (const location of locations.entries) {
-    for (const entry of [...(location.named_stock || []), ...(location.fittings || [])]) {
-      const good = entry.good;
-      if (goodSource.has(good)) {
-        conflicts.push(`${good} would be supplied by both ${goodSource.get(good)} and ${location.id}.`);
-      } else {
-        goodSource.set(good, location.id);
-      }
-    }
-    for (const entry of location.supplies || []) {
-      const category = entry.category;
-      if (categorySource.has(category)) {
-        conflicts.push(`${category} would be supplied by both ${categorySource.get(category)} and ${location.id}.`);
-      } else {
-        categorySource.set(category, location.id);
-      }
-    }
-  }
-
-  return conflicts;
-}
-
 // The probabilistic half (Task 9.4) — pure `(beforeWorld, afterWorld) => …`
 // functions over the two fetched world.json objects (tools/world_probe.gd,
 // Task 9.2), never touching a schema, `ctx.index`, or the tables themselves.
