@@ -15,6 +15,7 @@ import * as addIngredient from "./wizards/add_ingredient.js";
 import * as addLocation from "./wizards/add_location.js";
 import * as addDish from "./wizards/add_dish.js";
 import * as addObjective from "./wizards/add_objective.js";
+import * as addMaterial from "./wizards/add_material.js";
 import * as retire from "./wizards/retire.js";
 
 // One entry per view named in plans/authoring-tool.md Task 8. `tables` lists
@@ -47,6 +48,7 @@ const WIZARDS = [
   { key: "add-location", label: "Add a location", tables: addLocation.TABLES, steps: addLocation.steps },
   { key: "add-dish", label: "Add a dish", tables: addDish.TABLES, steps: addDish.steps },
   { key: "add-objective", label: "Add an objective", tables: addObjective.TABLES, steps: addObjective.steps },
+  { key: "add-material", label: "Add a material", tables: addMaterial.TABLES, steps: addMaterial.steps },
   { key: "retire", label: "Retire…", steps: retire.steps },
 ];
 

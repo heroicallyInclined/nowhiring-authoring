@@ -131,6 +131,13 @@ export function runWizard(ctx, steps, onComplete, onCancel) {
     heading.textContent = "Review";
     container.appendChild(heading);
 
+    for (const text of state.warnings || []) {
+      const warning = document.createElement("p");
+      warning.className = "validation";
+      warning.textContent = text;
+      container.appendChild(warning);
+    }
+
     const edits = state.edits || new Map();
     if (edits.size === 0) {
       const none = document.createElement("p");
