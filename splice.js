@@ -97,6 +97,29 @@ export function spliceInsertIntoEmptyArray(text, arrayPath, value) {
   return text.slice(0, node.offset) + replacement + text.slice(node.offset + node.length);
 }
 
+// Adds `"key": value` after the last property of a one-line, non-empty object
+// literal — the only shape an amenity `cost` takes. A multi-line or empty
+// object would need an indent or brace layout to invent, so it is refused.
+export function spliceAddKey(text, objectPath, key, value) {
+  const tree = parseTree(text);
+  const node = findNodeAtLocation(tree, objectPath);
+  if (!node || node.type !== "object") {
+    throw new Error(`splice: path ${JSON.stringify(objectPath)} is not an object`);
+  }
+  if (node.children.length === 0) {
+    throw new Error(`splice: object at ${JSON.stringify(objectPath)} is empty`);
+  }
+  if (text.slice(node.offset, node.offset + node.length).includes("\n")) {
+    throw new Error(`splice: object at ${JSON.stringify(objectPath)} spans more than one line`);
+  }
+  if (node.children.some((property) => property.children[0].value === key)) {
+    throw new Error(`splice: object at ${JSON.stringify(objectPath)} already has "${key}"`);
+  }
+  const last = node.children[node.children.length - 1];
+  const insertAt = last.offset + last.length;
+  return text.slice(0, insertAt) + `, ${JSON.stringify(key)}: ${literalFor(value)}` + text.slice(insertAt);
+}
+
 // Removes the array element at `index`, plus whichever neighbor's comma
 // separated it from the element that stays adjacent — mirrors Task 4's own
 // rule for a key delete, applied to a whole array element. `spliceAddRow`'s

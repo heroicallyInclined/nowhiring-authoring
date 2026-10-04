@@ -6,7 +6,7 @@
 // check: a scalar edit and a row add, each producing a minimal line diff and
 // passing the round-trip guard.
 import { readFileSync } from "node:fs";
-import { spliceScalar, spliceAddRow, spliceInsertIntoEmptyArray, spliceRemoveRow, verifySplice } from "../splice.js";
+import { spliceScalar, spliceAddRow, spliceInsertIntoEmptyArray, spliceRemoveRow, spliceAddKey, verifySplice } from "../splice.js";
 import { lineDiff, hunks } from "../diff.js";
 
 const GAME_REPO = new URL("../../nowHiringHeroes/", import.meta.url);
@@ -88,22 +88,22 @@ function check(label, condition) {
   check("exactly one added line, nothing else touched", changedLineCount(original, spliced) === 1);
 }
 
-// --- Case 3: insert into empty array, locations.json drowned_vineyard's supplies [] -> one entry ---
+// --- Case 3: insert into empty array, locations.json old_millpond's materials [] -> one entry ---
 {
   const path = new URL("data/locations.json", GAME_REPO);
   const original = readFileSync(path, "utf-8");
   const intended = JSON.parse(original);
-  const locationIndex = intended.entries.findIndex((e) => e.id === "drowned_vineyard");
-  intended.entries[locationIndex].supplies.push({ category: "fruits", amount: 2 });
+  const locationIndex = intended.entries.findIndex((e) => e.id === "old_millpond");
+  intended.entries[locationIndex].materials.push({ good: "timber", amount: 2 });
 
   const spliced = spliceInsertIntoEmptyArray(
     original,
-    ["entries", locationIndex, "supplies"],
-    { category: "fruits", amount: 2 },
+    ["entries", locationIndex, "materials"],
+    { good: "timber", amount: 2 },
   );
   const verdict = verifySplice(spliced, intended);
 
-  console.log("\n=== insert into empty array: locations.json drowned_vineyard's supplies ===");
+  console.log("\n=== insert into empty array: locations.json old_millpond's materials ===");
   printDiff(original, spliced);
   check("guard passed", verdict.ok);
   if (!verdict.ok) console.log("  reason:", verdict.reason);
@@ -147,7 +147,7 @@ function check(label, condition) {
   const path = new URL("data/locations.json", GAME_REPO);
   const original = readFileSync(path, "utf-8");
   const parsed = JSON.parse(original);
-  const locationIndex = parsed.entries.findIndex((e) => e.id === "old_millpond");
+  const locationIndex = parsed.entries.findIndex((e) => e.id === "drowned_vineyard");
 
   const intended = JSON.parse(original);
   intended.entries[locationIndex].supplies = [];
@@ -155,7 +155,7 @@ function check(label, condition) {
   const removed = spliceRemoveRow(original, ["entries", locationIndex, "supplies"], 0);
   const verdict = verifySplice(removed, intended);
 
-  console.log("\n=== row delete: locations.json, old_millpond's only supplies entry ===");
+  console.log("\n=== row delete: locations.json, drowned_vineyard's only supplies entry ===");
   printDiff(original, removed);
   check("guard passed", verdict.ok);
   if (!verdict.ok) console.log("  reason:", verdict.reason);
@@ -181,6 +181,28 @@ function check(label, condition) {
   printDiff(original, removed);
   check("guard passed", verdict.ok);
   if (!verdict.ok) console.log("  reason:", verdict.reason);
+}
+
+// --- Case 7: key add, amenities.json two_more_tables' cost gains "silver": 2 ---
+{
+  const path = new URL("data/amenities.json", GAME_REPO);
+  const original = readFileSync(path, "utf-8");
+  const intended = JSON.parse(original);
+  const amenityIndex = intended.entries.findIndex((e) => e.id === "two_more_tables");
+  intended.entries[amenityIndex].cost.silver = 2;
+
+  const spliced = spliceAddKey(original, ["entries", amenityIndex, "cost"], "silver", 2);
+  const verdict = verifySplice(spliced, intended);
+
+  console.log("\n=== key add: amenities.json, two_more_tables' cost gains silver ===");
+  printDiff(original, spliced);
+  check("guard passed", verdict.ok);
+  if (!verdict.ok) console.log("  reason:", verdict.reason);
+  check("exactly one changed line", changedLinePositions(original, spliced) === 1);
+
+  const refuses = (fn) => { try { fn(); return false; } catch { return true; } };
+  check("refuses a multi-line object", refuses(() => spliceAddKey(original, ["entries", amenityIndex], "x", 1)));
+  check("refuses a key already there", refuses(() => spliceAddKey(original, ["entries", amenityIndex, "cost"], "timber", 1)));
 }
 
 console.log(failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`);
